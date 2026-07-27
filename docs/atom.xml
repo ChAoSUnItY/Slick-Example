@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title>&lt;site-title-here&gt;</title>
-    <link href="https://&lt;your-domain-here&gt;/atom.xml" rel="self" type="application/rss+xml" />
-  <updated>2020-04-08T20:00:SZ</updated>
+    <title>Example Slick Site</title>
+    <link href="https://ChAoSUnItY.github.io/Slick-Example//atom.xml" rel="self" type="application/rss+xml" />
+  <updated>2026-07-27T20:46:04Z</updated>
   <author>
-      <name>&lt;author-name-here&gt;</name>
+      <name>Kyle Lin</name>
   </author>
-  <id>https://&lt;your-domain-here&gt;/</id>
+  <id>https://ChAoSUnItY.github.io/Slick-Example//</id>
 
   <entry>
       <title>Sample Post</title>
-      <link href="https://&lt;your-domain-here&gt;posts/sample-post.html"/>
-      <id>https://&lt;your-domain-here&gt;posts/sample-post.html</id>
-      <updated>2019-01-01T00:00:SZ</updated>
+      <link href="https://ChAoSUnItY.github.io/Slick-Example/posts/sample-post.html"/>
+      <id>https://ChAoSUnItY.github.io/Slick-Example/posts/sample-post.html</id>
+      <updated>2019-01-01T00:00:00Z</updated>
       <category term="slick"/>
       <category term="site"/>
       <summary>My first blog post using slick</summary>
