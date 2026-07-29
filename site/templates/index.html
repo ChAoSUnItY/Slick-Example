@@ -32,14 +32,32 @@
       </div>
     </section>
 
+    <section class="tag-cloud-section">
+      <div class="col" style="max-width: 1040px;">
+        <p class="tag-cloud-label">browse by tag</p>
+        <div class="tag-cloud">
+          {{#tagCloud}}
+          <a class="tag-pill tag-size-{{weight}}" href="#tag-{{tag}}" data-tag="{{tag}}">{{tag}} <span class="tag-count">{{count}}</span></a>
+          {{/tagCloud}}
+          {{^tagCloud}}
+          <span class="tag-cloud-empty">Add <code>tags: [...]</code> to a post's frontmatter to populate this.</span>
+          {{/tagCloud}}
+        </div>
+        <p class="filter-status" data-filter-status hidden>
+          Showing posts tagged <strong data-filter-tag></strong> — <button type="button" data-clear-filter>clear</button>
+        </p>
+      </div>
+    </section>
+
     <section class="entries">
       <div class="col" style="max-width: 1040px;">
         {{#posts}}
-        <a class="entry" href="{{url}}">
+        <a class="entry" href="{{url}}" data-tags="{{#tags}}{{.}} {{/tags}}">
           <span class="entry-date">{{date}}</span>
           <span class="entry-body">
             <h2>{{title}}<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by {{author}}</span>
+            <span class="entry-tags">{{#tags}}<span class="chip">{{.}}</span>{{/tags}}</span>
             {{#image}}<img class="entry-cover" src="{{image}}" alt="" loading="lazy" />{{/image}}
           </span>
         </a>

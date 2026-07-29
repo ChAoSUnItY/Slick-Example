@@ -192,6 +192,108 @@ ul, ol { padding-left: 1.2em; }
   margin-top: 1rem;
 }
 
+/* -- tag cloud -- */
+.tag-cloud-section {
+  padding: clamp(1.75rem, 4vw, 2.5rem) 0;
+  border-bottom: 1px solid var(--line);
+}
+.tag-cloud-label {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 .9rem;
+}
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .6rem .7rem;
+}
+.tag-cloud-empty {
+  font-family: var(--font-ui);
+  font-size: .9rem;
+  color: var(--ink-soft);
+}
+.tag-cloud-empty code {
+  font-family: var(--font-mono);
+  background: var(--paper-raised);
+  padding: .1em .35em;
+  border-radius: 3px;
+}
+.tag-pill {
+  font-family: var(--font-ui);
+  text-decoration: none;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .3em .85em;
+  line-height: 1.4;
+  transition: border-color .15s ease, color .15s ease, background-color .15s ease;
+  white-space: nowrap;
+}
+.tag-pill:hover { border-color: var(--accent2); color: var(--ink); }
+.tag-pill.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.tag-pill .tag-count {
+  font-family: var(--font-mono);
+  font-size: .78em;
+  opacity: .65;
+}
+/* size buckets: weight 1 (least used) -> 5 (most used) */
+.tag-pill.tag-size-1 { font-size: .82rem; }
+.tag-pill.tag-size-2 { font-size: .9rem; }
+.tag-pill.tag-size-3 { font-size: 1rem; }
+.tag-pill.tag-size-4 { font-size: 1.14rem; font-weight: 500; }
+.tag-pill.tag-size-5 { font-size: 1.3rem; font-weight: 600; color: var(--ink); }
+
+.filter-status {
+  margin: 1rem 0 0;
+  font-family: var(--font-ui);
+  font-size: .88rem;
+  color: var(--ink-soft);
+}
+.filter-status strong { color: var(--ink); font-weight: 600; }
+.filter-status[hidden] { display: none; }
+.filter-status button {
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  color: var(--accent2);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.filter-status button:hover { color: var(--accent); }
+
+/* -- tag chips (small, inline — post cards + post page) -- */
+.chip {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: .12em .5em;
+  text-decoration: none;
+  transition: border-color .15s ease, color .15s ease;
+}
+a.chip:hover { border-color: var(--accent2); color: var(--accent2); }
+.entry-tags, .post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+.entry-tags { margin-top: .5rem; }
+.entry-tags:empty, .post-tags:empty { display: none; }
+.post-tags { margin-top: 1rem; }
+
 /* -- post index list (editorial rows, not cards) -- */
 .entries { padding: clamp(2rem, 5vw, 3rem) 0 5rem; }
 .entry {
@@ -204,6 +306,7 @@ ul, ol { padding-left: 1.2em; }
   color: inherit;
 }
 .entry:first-child { padding-top: 0; }
+.entry.is-hidden { display: none; }
 .entry-date {
   font-family: var(--font-mono);
   font-size: .82rem;
