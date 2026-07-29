@@ -46,6 +46,56 @@
     onScroll();
   }
 
+  /* ---------- tag cloud filtering (index page only — no-ops elsewhere) ---------- */
+  var tagPills = document.querySelectorAll(".tag-pill");
+  var entries = document.querySelectorAll(".entry");
+  var statusBar = document.querySelector("[data-filter-status]");
+  var statusTagLabel = document.querySelector("[data-filter-tag]");
+  var clearBtn = document.querySelector("[data-clear-filter]");
+
+  function slugify(s) { return (s || "").trim().toLowerCase(); }
+
+  function applyFilter(tagSlug) {
+    if (!tagSlug) {
+      entries.forEach(function (e) { e.classList.remove("is-hidden"); });
+      tagPills.forEach(function (p) { p.classList.remove("is-active"); });
+      if (statusBar) statusBar.hidden = true;
+      return;
+    }
+    entries.forEach(function (e) {
+      var entryTags = (e.getAttribute("data-tags") || "")
+        .split(/\s+/).filter(Boolean).map(slugify);
+      e.classList.toggle("is-hidden", entryTags.indexOf(tagSlug) === -1);
+    });
+    tagPills.forEach(function (p) {
+      p.classList.toggle("is-active", slugify(p.getAttribute("data-tag")) === tagSlug);
+    });
+    if (statusBar) {
+      statusBar.hidden = false;
+      if (statusTagLabel) statusTagLabel.textContent = tagSlug;
+    }
+  }
+
+  if (tagPills.length) {
+    tagPills.forEach(function (pill) {
+      pill.addEventListener("click", function (evt) {
+        evt.preventDefault();
+        var slug = slugify(pill.getAttribute("data-tag"));
+        var next = pill.classList.contains("is-active") ? "" : slug;
+        history.replaceState(null, "", next ? "#tag-" + next : location.pathname);
+        applyFilter(next);
+      });
+    });
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        history.replaceState(null, "", location.pathname);
+        applyFilter("");
+      });
+    }
+    var initialTag = location.hash.replace(/^#tag-/, "");
+    if (initialTag) applyFilter(slugify(decodeURIComponent(initialTag)));
+  }
+
   /* ---------- copy-to-clipboard on code blocks ---------- */
   document.querySelectorAll(".post-body pre").forEach(function (pre) {
     var btn = document.createElement("button");
