@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{title}} — Field Notes</title>
-  <meta name="description" content="{{title}}, by {{author}}." />
+  <title>Why I Went Back to Static Files — Field Notes</title>
+  <meta name="description" content="Why I Went Back to Static Files, by Your Name." />
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="../css/style.css" />
 </head>
@@ -30,19 +30,44 @@
       <header class="post-head">
         <div class="col">
           <p class="eyebrow">field note</p>
-          <h1>{{title}}</h1>
-          <p class="post-meta">{{author}}<span class="dot">·</span>{{date}}</p>
+          <h1>Why I Went Back to Static Files</h1>
+          <p class="post-meta">Your Name<span class="dot">·</span>Jul 12, 2026</p>
         </div>
       </header>
 
-      {{#image}}
       <div class="post-cover">
-        <img src="{{image}}" alt="" />
+        <img src="/images/cover-graph.svg" alt="" />
       </div>
-      {{/image}}
 
       <div class="col post-body" data-post-body>
-        {{{content}}}
+        <p>A site built with Shake has one property that's easy to undersell:
+<strong>every build is a proof</strong>. If
+<code>stack exec build-site</code> finishes, the output directory is a
+complete, correct rendering of everything in <code>site/</code> — no
+half-migrated database, no cache invalidation bugs, nothing running that
+you didn't just watch compile.</p>
+<h2 id="the-trade-off-honestly">The trade-off, honestly</h2>
+<p>You give up:</p>
+<ol>
+<li>Comments, without bolting on a third-party widget</li>
+<li>Search, unless you build or embed one</li>
+<li>Anything that needs to change without a rebuild</li>
+</ol>
+<p>You get back a site that's nearly impossible to break in production,
+because there's no production process to break — just files on a
+CDN.</p>
+<blockquote>
+<p>The best kind of downtime is the kind that can't happen because
+there's nothing running.</p>
+</blockquote>
+<h2 id="this-template">This template</h2>
+<p>This starter wires the Slick/Shake pipeline you already had to a real
+front end: <code>site/templates/index.html</code> and
+<code>site/templates/post.html</code> are Mustache templates,
+<code>site/css/style.css</code> and <code>site/js/main.js</code> get
+copied straight through to <code>docs/</code>, and posts live as
+markdown in <code>site/posts/</code>. Nothing here needs Node, a
+bundler, or a package.json.</p>
       </div>
     </article>
 

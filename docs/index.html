@@ -1,49 +1,69 @@
 <!DOCTYPE html>
-<html lang="en"> 
-<head profile="http://www.w3.org/2005/10/profile">
-    <meta charset="UTF-8">
-    <meta name="description" content="Example Slick Site">
-    <meta name="author" content="Kyle Lin">
-    <meta name=viewport content="width=device-width, initial-scale=1">
-    <title>Example Slick Site</title>
-    <link rel="icon" type="image/png" href="/images/favicon.png">
-    <link rel="stylesheet" href="/css/style.css">
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Field Notes — a Slick blog</title>
+  <meta name="description" content="Notes on code, tools, and things worth writing down." />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    <header>
-        <nav>
-            <a id="beacon" href="/">
-                <div id="home-text"> HOME </div>
-            </a>
-        </nav>
-    
-        <div class="right-sidebar">
-            <a class="ext-link" href="https://github.com/ChAoSUnItY">
-            <img src="/images/github-logo.png" alt="Github Profile"/>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">λ</span>
+        <span class="brand-name">Field Notes</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html"><span class="nav-label">Writing</span></a>
+        <a href="https://github.com/" target="_blank" rel="noopener"><span class="nav-label">Source</span></a>
+        <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle color theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="col" style="max-width: 1040px;">
+        <p class="eyebrow">field notes</p>
+        <h1>Short essays on code, built statically, shipped without a database.</h1>
+        <p>A running log of things worth writing down — compiled with Slick, deployed as flat files, read at your own pace.</p>
+      </div>
+    </section>
+
+    <section class="entries">
+      <div class="col" style="max-width: 1040px;">
+        <a class="entry" href="posts/hello-world.html">
+          <span class="entry-date">Jul 29, 2026</span>
+          <span class="entry-body">
+            <h2>Hello, Static World<span class="entry-arrow">&nbsp;→</span></h2>
+            <span class="entry-meta">by Your Name</span>
+            <img class="entry-cover" src="/images/cover-lambda.svg" alt="" loading="lazy" />
+          </span>
         </a>
+        <a class="entry" href="posts/why-static.html">
+          <span class="entry-date">Jul 12, 2026</span>
+          <span class="entry-body">
+            <h2>Why I Went Back to Static Files<span class="entry-arrow">&nbsp;→</span></h2>
+            <span class="entry-meta">by Your Name</span>
+            <img class="entry-cover" src="/images/cover-graph.svg" alt="" loading="lazy" />
+          </span>
+        </a>
+      </div>
+    </section>
+  </main>
 
-        <div id="theme-button">DAY</div>
-        </div>
-    </header>
-<div id="page">
-            <section class="table-of-contents">
-                <h1>All Posts</h1>
-                <div class="metadata">
-                </div>
-                <ul>
-                        <li>
-            <a href="posts/sample-post.html">Sample Post <span class="date">Jan 1, 2019</span> </a>
-        </li>
-</ul>
-        </section>
-</div>
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="build-stamp">built with Slick + Shake + GHC</span>
+      <span class="footer-links">
+        <a href="https://github.com/ChrisPenner/slick" target="_blank" rel="noopener">slick</a>
+        <a href="index.html#top">top</a>
+      </span>
+    </div>
+  </footer>
 
-<footer>
-    Built with Haskell using <a href="https://github.com/ChrisPenner/slick">slick</a> ❤️
-</footer>
-
-<link href='https://fonts.googleapis.com/css?family=Quicksand:300,400' rel='stylesheet' type='text/css'>
-<link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
-<script src="/js/main.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>

@@ -1,22 +1,46 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-    <title>Example Slick Site</title>
-    <link href="https://ChAoSUnItY.github.io/Slick-Example//atom.xml" rel="self" type="application/rss+xml" />
-  <updated>2026-07-29T07:42:01Z</updated>
-  <author>
-      <name>Kyle Lin</name>
-  </author>
-  <id>https://ChAoSUnItY.github.io/Slick-Example//</id>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hello, Static World — Field Notes</title>
+  <meta name="description" content="Hello, Static World, by Your Name." />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="progress" data-progress></div>
 
-  <entry>
-      <title>Hello, Static World</title>
-      <link href="https://ChAoSUnItY.github.io/Slick-Example/posts/hello-world.html"/>
-      <id>https://ChAoSUnItY.github.io/Slick-Example/posts/hello-world.html</id>
-      <updated>2026-07-29T00:00:00Z</updated>
-      <category term="slick"/>
-      <category term="site"/>
-      <summary>My first blog post using slick</summary>
-      <content type="html"><![CDATA[<p>This is the first post in your new <strong>Slick</strong> site.
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark">λ</span>
+        <span class="brand-name">Field Notes</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../index.html"><span class="nav-label">Writing</span></a>
+        <a href="https://github.com/" target="_blank" rel="noopener"><span class="nav-label">Source</span></a>
+        <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle color theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <article>
+      <header class="post-head">
+        <div class="col">
+          <p class="eyebrow">field note</p>
+          <h1>Hello, Static World</h1>
+          <p class="post-meta">Your Name<span class="dot">·</span>Jul 29, 2026</p>
+        </div>
+      </header>
+
+      <div class="post-cover">
+        <img src="/images/cover-lambda.svg" alt="" />
+      </div>
+
+      <div class="col post-body" data-post-body>
+        <p>This is the first post in your new <strong>Slick</strong> site.
 Everything you're reading right now is plain markdown, compiled at build
 time into a flat HTML file — no server, no database, no runtime to keep
 patched.</p>
@@ -51,43 +75,27 @@ class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a 
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  convert postData</span></code></pre></div>
 <p>Delete this file, add your own markdown into
 <code>site/posts/</code>, and run <code>stack exec build-site</code> to
-rebuild.</p>]]></content>
-  </entry>
-  <entry>
-      <title>Why I Went Back to Static Files</title>
-      <link href="https://ChAoSUnItY.github.io/Slick-Example/posts/why-static.html"/>
-      <id>https://ChAoSUnItY.github.io/Slick-Example/posts/why-static.html</id>
-      <updated>2026-07-12T00:00:00Z</updated>
-      <category term="slick"/>
-      <category term="site"/>
-      <summary>My first blog post using slick</summary>
-      <content type="html"><![CDATA[<p>A site built with Shake has one property that's easy to undersell:
-<strong>every build is a proof</strong>. If
-<code>stack exec build-site</code> finishes, the output directory is a
-complete, correct rendering of everything in <code>site/</code> — no
-half-migrated database, no cache invalidation bugs, nothing running that
-you didn't just watch compile.</p>
-<h2 id="the-trade-off-honestly">The trade-off, honestly</h2>
-<p>You give up:</p>
-<ol>
-<li>Comments, without bolting on a third-party widget</li>
-<li>Search, unless you build or embed one</li>
-<li>Anything that needs to change without a rebuild</li>
-</ol>
-<p>You get back a site that's nearly impossible to break in production,
-because there's no production process to break — just files on a
-CDN.</p>
-<blockquote>
-<p>The best kind of downtime is the kind that can't happen because
-there's nothing running.</p>
-</blockquote>
-<h2 id="this-template">This template</h2>
-<p>This starter wires the Slick/Shake pipeline you already had to a real
-front end: <code>site/templates/index.html</code> and
-<code>site/templates/post.html</code> are Mustache templates,
-<code>site/css/style.css</code> and <code>site/js/main.js</code> get
-copied straight through to <code>docs/</code>, and posts live as
-markdown in <code>site/posts/</code>. Nothing here needs Node, a
-bundler, or a package.json.</p>]]></content>
-  </entry>
-</feed>
+rebuild.</p>
+      </div>
+    </article>
+
+    <div class="post-foot">
+      <div class="col">
+        <a class="back-link" href="../index.html"><span class="arrow">←</span> Back to all notes</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="build-stamp">built with Slick + Shake + GHC</span>
+      <span class="footer-links">
+        <a href="https://github.com/ChrisPenner/slick" target="_blank" rel="noopener">slick</a>
+        <a href="../index.html">index</a>
+      </span>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

@@ -1,23 +1,66 @@
 <!DOCTYPE html>
-<html lang="en"> 
-<head profile="http://www.w3.org/2005/10/profile">
-    <meta charset="UTF-8">
-    <meta name="description" content="{{siteTitle}}">
-    <meta name="author" content="{{siteAuthor}}">
-    <meta name=viewport content="width=device-width, initial-scale=1">
-    <title>{{siteTitle}}</title>
-    <link rel="icon" type="image/png" href="/images/favicon.png">
-    <link rel="stylesheet" href="/css/style.css">
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Field Notes — a Slick blog</title>
+  <meta name="description" content="Notes on code, tools, and things worth writing down." />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    {{>site/templates/header.html}}
-<div id="page">
-            <section class="table-of-contents">
-                <h1>All Posts</h1>
-                <div class="metadata">
-                </div>
-                {{>site/templates/post-list.html}}
-        </section>
-</div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">λ</span>
+        <span class="brand-name">Field Notes</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html"><span class="nav-label">Writing</span></a>
+        <a href="https://github.com/" target="_blank" rel="noopener"><span class="nav-label">Source</span></a>
+        <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle color theme">☾</button>
+      </nav>
+    </div>
+  </header>
 
-{{>site/templates/footer.html}}
+  <main>
+    <section class="hero">
+      <div class="col" style="max-width: 1040px;">
+        <p class="eyebrow">field notes</p>
+        <h1>Short essays on code, built statically, shipped without a database.</h1>
+        <p>A running log of things worth writing down — compiled with Slick, deployed as flat files, read at your own pace.</p>
+      </div>
+    </section>
+
+    <section class="entries">
+      <div class="col" style="max-width: 1040px;">
+        {{#posts}}
+        <a class="entry" href="{{url}}">
+          <span class="entry-date">{{date}}</span>
+          <span class="entry-body">
+            <h2>{{title}}<span class="entry-arrow">&nbsp;→</span></h2>
+            <span class="entry-meta">by {{author}}</span>
+            {{#image}}<img class="entry-cover" src="{{image}}" alt="" loading="lazy" />{{/image}}
+          </span>
+        </a>
+        {{/posts}}
+        {{^posts}}
+        <p class="empty-state">Nothing published yet — drop a markdown file in <code>site/posts/</code> and rebuild.</p>
+        {{/posts}}
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="build-stamp">built with Slick + Shake + GHC</span>
+      <span class="footer-links">
+        <a href="https://github.com/ChrisPenner/slick" target="_blank" rel="noopener">slick</a>
+        <a href="index.html#top">top</a>
+      </span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
