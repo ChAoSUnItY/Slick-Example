@@ -122,4 +122,6 @@ buildRules = do
   copyStaticFiles
 
 main :: IO ()
-main = slick buildRules
+main = shakeArgsForward
+    shakeOptions { shakeLintInside = ["."] }
+    buildRules
