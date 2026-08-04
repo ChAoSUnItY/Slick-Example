@@ -6,9 +6,12 @@ module Main where
 
 import           Control.Lens
 import           Control.Monad
+import           Control.Applicative        ((<|>))
 import           Data.Aeson                 as A
 import           Data.Aeson.Lens
+import           Data.List                  (sortBy)
 import qualified Data.Map.Strict            as Map
+import           Data.Time                  (Day, defaultTimeLocale, parseTimeM)
 import           Development.Shake
 import           Development.Shake.Classes (Binary)
 import           Development.Shake.Forward
@@ -79,9 +82,27 @@ buildTagCloud ps =
 buildIndex :: [Post] -> Action ()
 buildIndex posts' = do
   indexT <- compileTemplate' "site/templates/index.html"
-  let indexInfo = IndexInfo { posts = posts', tagCloud = buildTagCloud posts' }
+  let sortedPosts = sortPostsByDate posts'
+      indexInfo = IndexInfo { posts = sortedPosts, tagCloud = buildTagCloud sortedPosts }
       indexHTML = T.unpack $ substitute indexT (toJSON indexInfo)
   writeFile' (outputFolder </> "index.html") indexHTML
+
+-- | Parse the date formats used by the starter posts.  Posts with an
+-- unrecognised date are kept at the end of the index rather than preventing
+-- the site from building.
+postDate :: Post -> Maybe Day
+postDate post =
+  foldr (\format result ->
+           parseTimeM True defaultTimeLocale format (date post) <|> result) Nothing
+    [ "%b %e, %Y"
+    , "%e %b %Y"
+    , "%Y-%m-%d"
+    ]
+
+-- | Newest posts first; preserve the relative order of posts whose dates are
+-- identical or cannot be parsed.
+sortPostsByDate :: [Post] -> [Post]
+sortPostsByDate = sortBy $ \a b -> compare (postDate b) (postDate a)
 
 -- | Find and build all posts
 buildPosts :: Action [Post]
