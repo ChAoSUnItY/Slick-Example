@@ -65,6 +65,12 @@
 
     <section class="entries">
       <div class="col" style="max-width: 1040px;">
+        <nav class="pagination pagination-top" aria-label="Post pages" data-pagination data-posts-per-page="5" hidden>
+          <button class="pagination-link" type="button" data-page-previous>← Newer posts</button>
+          <span class="pagination-status" data-page-status></span>
+          <button class="pagination-link pagination-link-next" type="button" data-page-next>Older posts →</button>
+        </nav>
+
         <a class="entry" href="posts/rust-ownership-patterns.html" data-tags="rust systems ">
           <span class="entry-date">Aug 18, 2026</span>
           <span class="entry-body">
@@ -173,6 +179,12 @@
             <img class="entry-cover" src="/images/cover-graph.svg" alt="" loading="lazy" />
           </span>
         </a>
+
+        <nav class="pagination" aria-label="Post pages" data-pagination data-posts-per-page="5" hidden>
+          <button class="pagination-link" type="button" data-page-previous>← Newer posts</button>
+          <span class="pagination-status" data-page-status></span>
+          <button class="pagination-link pagination-link-next" type="button" data-page-next>Older posts →</button>
+        </nav>
       </div>
     </section>
   </main>

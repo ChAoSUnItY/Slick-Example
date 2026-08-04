@@ -51,6 +51,12 @@
 
     <section class="entries">
       <div class="col" style="max-width: 1040px;">
+        <nav class="pagination pagination-top" aria-label="Post pages" data-pagination data-posts-per-page="{{indexPostsPerPage}}" hidden>
+          <button class="pagination-link" type="button" data-page-previous>← Newer posts</button>
+          <span class="pagination-status" data-page-status></span>
+          <button class="pagination-link pagination-link-next" type="button" data-page-next>Older posts →</button>
+        </nav>
+
         {{#posts}}
         <a class="entry" href="{{url}}" data-tags="{{#tags}}{{.}} {{/tags}}">
           <span class="entry-date">{{date}}</span>
@@ -65,6 +71,12 @@
         {{^posts}}
         <p class="empty-state">Nothing published yet — drop a markdown file in <code>site/posts/</code> and rebuild.</p>
         {{/posts}}
+
+        <nav class="pagination" aria-label="Post pages" data-pagination data-posts-per-page="{{indexPostsPerPage}}" hidden>
+          <button class="pagination-link" type="button" data-page-previous>← Newer posts</button>
+          <span class="pagination-status" data-page-status></span>
+          <button class="pagination-link pagination-link-next" type="button" data-page-next>Older posts →</button>
+        </nav>
       </div>
     </section>
   </main>

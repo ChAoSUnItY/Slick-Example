@@ -24,6 +24,10 @@ import qualified Data.Text                  as T
 outputFolder :: FilePath
 outputFolder = "docs/"
 
+-- | Maximum number of posts rendered on one index page.
+postsPerIndexPage :: Int
+postsPerIndexPage = 5
+
 -- | A single entry in the tag cloud. `weight` is a 1-5 bucket, sized
 -- relative to the most-used tag, so the template can pick a font size
 -- purely from data (via a `tag-size-N` CSS class) without doing any
@@ -38,8 +42,9 @@ data TagCount =
 -- | Data for the index page
 data IndexInfo =
   IndexInfo
-    { posts    :: [Post]
-    , tagCloud :: [TagCount]
+    { posts             :: [Post]
+    , tagCloud          :: [TagCount]
+    , indexPostsPerPage :: Int
     } deriving (Generic, Show, FromJSON, ToJSON)
 
 -- | Data for a blog post.
@@ -78,12 +83,18 @@ buildTagCloud ps =
                          / fromIntegral (maxCount - minCount) :: Double)
   in [ TagCount t n (bucket n) | (t, n) <- counts ]
 
--- | given a list of posts this will build a table of contents
+-- | Build the index page with the newest posts first. Client-side JavaScript
+-- uses `indexPostsPerPage` to paginate the rendered entries without loading a
+-- separate index document.
 buildIndex :: [Post] -> Action ()
 buildIndex posts' = do
   indexT <- compileTemplate' "site/templates/index.html"
   let sortedPosts = sortPostsByDate posts'
-      indexInfo = IndexInfo { posts = sortedPosts, tagCloud = buildTagCloud sortedPosts }
+      indexInfo = IndexInfo
+        { posts = sortedPosts
+        , tagCloud = buildTagCloud sortedPosts
+        , indexPostsPerPage = postsPerIndexPage
+        }
       indexHTML = T.unpack $ substitute indexT (toJSON indexInfo)
   writeFile' (outputFolder </> "index.html") indexHTML
 
