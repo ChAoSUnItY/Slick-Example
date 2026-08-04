@@ -63,6 +63,14 @@ data Post =
          }
     deriving (Generic, Eq, Ord, Show, FromJSON, ToJSON, Binary)
 
+-- | A link to a neighbouring post. The URL is relative to a page in
+-- `docs/posts/`, unlike `Post.url`, which is relative to the site root.
+data PostLink =
+  PostLink
+    { linkTitle :: String
+    , linkUrl   :: String
+    } deriving (Generic, Show, ToJSON)
+
 -- | A post's tags, defaulting to none.
 postTags :: Post -> [String]
 postTags = maybe [] id . tags
@@ -119,24 +127,44 @@ sortPostsByDate = sortBy $ \a b -> compare (postDate b) (postDate a)
 buildPosts :: Action [Post]
 buildPosts = do
   pPaths <- getDirectoryFiles "." ["site/posts//*.md"]
-  forP pPaths buildPost
+  posts' <- forP pPaths loadPost
+  let sortedPosts = sortPostsByDate posts'
+      adjacentPosts = zip3
+        (Nothing : map Just sortedPosts)
+        sortedPosts
+        (map Just (drop 1 sortedPosts) ++ [Nothing])
+  void $ forP adjacentPosts $ \(newerPost, post, olderPost) ->
+    writePost post olderPost newerPost
+  pure sortedPosts
 
--- | Load a post, process metadata, write it to output, then return the post object
--- Detects changes to either post content or template
-buildPost :: FilePath -> Action Post
-buildPost srcPath = cacheAction ("build" :: T.Text, srcPath) $ do
-  liftIO . putStrLn $ "Rebuilding post: " <> srcPath
+-- | Load and process a post's Markdown and frontmatter.
+loadPost :: FilePath -> Action Post
+loadPost srcPath = cacheAction ("load" :: T.Text, srcPath) $ do
+  liftIO . putStrLn $ "Loading post: " <> srcPath
   postContent <- readFile' srcPath
   -- load post content and metadata as JSON blob
   postData <- markdownToHTML . T.pack $ postContent
   let postUrl = T.pack . dropDirectory1 $ srcPath -<.> "html"
       withPostUrl = _Object . at "url" ?~ String postUrl
-  -- Add additional metadata we've been able to compute
-  let fullPostData = withPostUrl $ postData
+  convert . withPostUrl $ postData
+
+-- | Render a post with links to its neighbours: next is newer and previous is
+-- older, relative to the newest-first index order.
+writePost :: Post -> Maybe Post -> Maybe Post -> Action ()
+writePost post previousPost nextPost = do
   template <- compileTemplate' "site/templates/post.html"
-  writeFile' (outputFolder </> T.unpack postUrl) . T.unpack $ substitute template fullPostData
-  -- Convert the metadata into a Post object
-  convert fullPostData
+  let postData = toJSON post
+      withNavigation = postData
+        & _Object . at "previousPost" ?~ maybe Null (toJSON . postLink) previousPost
+        & _Object . at "nextPost" ?~ maybe Null (toJSON . postLink) nextPost
+      postHTML = T.unpack $ substitute template withNavigation
+  writeFile' (outputFolder </> url post) postHTML
+
+postLink :: Post -> PostLink
+postLink post = PostLink
+  { linkTitle = title post
+  , linkUrl = dropDirectory1 (url post)
+  }
 
 -- | Copy all static files from the listed folders to their destination
 copyStaticFiles :: Action ()
