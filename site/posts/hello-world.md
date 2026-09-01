@@ -4,7 +4,7 @@ author: "Your Name"
 date: Jul 29, 2026
 tags: [slick, site, first]
 description: My first blog post using slick
-image: "/images/cover-lambda.svg"
+image: "images/cover-lambda.svg"
 ---
 
 This is the first post in your new **Slick** site. Everything you're reading right now is plain markdown, compiled at build time into a flat HTML file — no server, no database, no runtime to keep patched.
@@ -25,7 +25,7 @@ Every post needs a YAML block at the top with `title`, `author`, `date`, and an 
 title: "My Post Title"
 author: "Your Name"
 date: "29 Jul 2026"
-image: "/images/cover-lambda.svg"
+image: "images/cover-lambda.svg"
 ---
 ```
 

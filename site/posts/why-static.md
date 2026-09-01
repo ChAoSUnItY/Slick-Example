@@ -4,7 +4,7 @@ author: "Your Name"
 date: Jul 12, 2026
 tags: [slick, site]
 description: My first blog post using slick
-image: "/images/cover-graph.svg"
+image: "images/cover-graph.svg"
 ---
 
 A site built with Shake has one property that's easy to undersell: **every build is a proof**. If `stack exec build-site` finishes, the output directory is a complete, correct rendering of everything in `site/` — no half-migrated database, no cache invalidation bugs, nothing running that you didn't just watch compile.
