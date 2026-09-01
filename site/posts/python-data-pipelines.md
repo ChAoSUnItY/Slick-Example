@@ -3,6 +3,7 @@ title: "Python Data Pipeline Basics"
 author: "Your Name"
 date: Aug 12, 2026
 tags: [python, data]
+category: data
 description: Lorem ipsum dolor sit amet.
 ---
 

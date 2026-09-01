@@ -3,6 +3,7 @@ title: "Elixir Fault-Tolerant Services"
 author: "Your Name"
 date: Jul 23, 2026
 tags: [elixir, backend]
+category: backend
 description: Lorem ipsum dolor sit amet.
 ---
 

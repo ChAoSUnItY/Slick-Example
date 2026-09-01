@@ -3,6 +3,7 @@ title: "Go Concurrency Patterns"
 author: "Your Name"
 date: Aug 6, 2026
 tags: [go, concurrency]
+category: backend
 description: Lorem ipsum dolor sit amet.
 ---
 

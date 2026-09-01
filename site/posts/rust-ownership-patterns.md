@@ -3,6 +3,7 @@ title: "Rust Ownership Patterns"
 author: "Your Name"
 date: Aug 18, 2026
 tags: [rust, systems]
+category: systems
 description: Lorem ipsum dolor sit amet.
 ---
 

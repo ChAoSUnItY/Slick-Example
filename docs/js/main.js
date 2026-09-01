@@ -46,28 +46,37 @@
     onScroll();
   }
 
-  /* ---------- tag cloud filtering (index page only — no-ops elsewhere) ---------- */
-  var tagPills = document.querySelectorAll(".tag-pill");
+  /* ---------- query-string pagination (listing pages only) ---------- */
   var entries = document.querySelectorAll(".entry");
-  var statusBar = document.querySelector("[data-filter-status]");
-  var statusTagLabel = document.querySelector("[data-filter-tag]");
-  var clearBtn = document.querySelector("[data-clear-filter]");
   var paginations = document.querySelectorAll("[data-pagination]");
   var postsPerPage = paginations.length ? Number(paginations[0].getAttribute("data-posts-per-page")) : 0;
-  var currentPage = 1;
+  var currentPage = 0;
 
-  function slugify(s) { return (s || "").trim().toLowerCase(); }
+  function pageUrl(page) {
+    var nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("page", String(page));
+    return nextUrl.pathname + nextUrl.search + nextUrl.hash;
+  }
+
+  function requestedPage() {
+    var value = new URL(window.location.href).searchParams.get("page");
+    if (value === null || !/^(0|[1-9][0-9]*)$/.test(value)) return null;
+    return Number(value);
+  }
 
   function renderPage(page) {
     if (!paginations.length || !postsPerPage) return;
-    var visibleEntries = Array.prototype.filter.call(entries, function (entry) {
-      return !entry.classList.contains("is-hidden");
-    });
-    var pageCount = Math.max(1, Math.ceil(visibleEntries.length / postsPerPage));
-    currentPage = Math.min(Math.max(page, 1), pageCount);
+    var pageCount = Math.max(1, Math.ceil(entries.length / postsPerPage));
+    var requested = page === null ? 0 : page;
+    currentPage = Math.min(Math.max(requested, 0), pageCount - 1);
+
+    if (page === null || requested !== currentPage) {
+      window.location.replace(pageUrl(currentPage));
+      return;
+    }
 
     entries.forEach(function (entry) { entry.classList.add("is-page-hidden"); });
-    visibleEntries.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage)
+    Array.prototype.slice.call(entries, currentPage * postsPerPage, (currentPage + 1) * postsPerPage)
       .forEach(function (entry) { entry.classList.remove("is-page-hidden"); });
 
     paginations.forEach(function (pagination) {
@@ -75,66 +84,20 @@
       var pageStatus = pagination.querySelector("[data-page-status]");
       var previousPageBtn = pagination.querySelector("[data-page-previous]");
       var nextPageBtn = pagination.querySelector("[data-page-next]");
-      if (pageStatus) pageStatus.textContent = "Page " + currentPage + " of " + pageCount;
-      if (previousPageBtn) previousPageBtn.disabled = currentPage === 1;
-      if (nextPageBtn) nextPageBtn.disabled = currentPage === pageCount;
+      if (pageStatus) pageStatus.textContent = "Page " + (currentPage + 1) + " of " + pageCount;
+      if (previousPageBtn) {
+        previousPageBtn.href = pageUrl(Math.max(currentPage - 1, 0));
+        previousPageBtn.setAttribute("aria-disabled", String(currentPage === 0));
+        previousPageBtn.classList.toggle("is-disabled", currentPage === 0);
+      }
+      if (nextPageBtn) {
+        nextPageBtn.href = pageUrl(Math.min(currentPage + 1, pageCount - 1));
+        nextPageBtn.setAttribute("aria-disabled", String(currentPage === pageCount - 1));
+        nextPageBtn.classList.toggle("is-disabled", currentPage === pageCount - 1);
+      }
     });
   }
-
-  function applyFilter(tagSlug) {
-    if (!tagSlug) {
-      entries.forEach(function (e) { e.classList.remove("is-hidden"); });
-      tagPills.forEach(function (p) { p.classList.remove("is-active"); });
-      if (statusBar) statusBar.hidden = true;
-      renderPage(1);
-      return;
-    }
-    entries.forEach(function (e) {
-      var entryTags = (e.getAttribute("data-tags") || "")
-        .split(/\s+/).filter(Boolean).map(slugify);
-      e.classList.toggle("is-hidden", entryTags.indexOf(tagSlug) === -1);
-    });
-    tagPills.forEach(function (p) {
-      p.classList.toggle("is-active", slugify(p.getAttribute("data-tag")) === tagSlug);
-    });
-    if (statusBar) {
-      statusBar.hidden = false;
-      if (statusTagLabel) statusTagLabel.textContent = tagSlug;
-    }
-    renderPage(1);
-  }
-
-  paginations.forEach(function (pagination) {
-    var previousPageBtn = pagination.querySelector("[data-page-previous]");
-    var nextPageBtn = pagination.querySelector("[data-page-next]");
-    if (previousPageBtn) {
-      previousPageBtn.addEventListener("click", function () { renderPage(currentPage - 1); });
-    }
-    if (nextPageBtn) {
-      nextPageBtn.addEventListener("click", function () { renderPage(currentPage + 1); });
-    }
-  });
-
-  if (tagPills.length) {
-    tagPills.forEach(function (pill) {
-      pill.addEventListener("click", function (evt) {
-        evt.preventDefault();
-        var slug = slugify(pill.getAttribute("data-tag"));
-        var next = pill.classList.contains("is-active") ? "" : slug;
-        history.replaceState(null, "", next ? "#tag-" + next : location.pathname);
-        applyFilter(next);
-      });
-    });
-    if (clearBtn) {
-      clearBtn.addEventListener("click", function () {
-        history.replaceState(null, "", location.pathname);
-        applyFilter("");
-      });
-    }
-    var initialTag = location.hash.replace(/^#tag-/, "");
-    if (initialTag) applyFilter(slugify(decodeURIComponent(initialTag)));
-  }
-  renderPage(1);
+  renderPage(requestedPage());
 
   /* ---------- copy-to-clipboard on code blocks ---------- */
   document.querySelectorAll(".post-body pre").forEach(function (pre) {

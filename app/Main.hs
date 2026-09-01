@@ -9,7 +9,8 @@ import           Control.Monad
 import           Control.Applicative        ((<|>))
 import           Data.Aeson                 as A
 import           Data.Aeson.Lens
-import           Data.List                  (sortBy)
+import           Data.Char                  (isAlphaNum, toLower)
+import           Data.List                  (intercalate, sortBy)
 import qualified Data.Map.Strict            as Map
 import           Data.Time                  (Day, defaultTimeLocale, parseTimeM)
 import           Development.Shake
@@ -37,15 +38,38 @@ data TagCount =
     { tag    :: String
     , count  :: Int
     , weight :: Int
+    , tagUrl :: String
     } deriving (Generic, Show, FromJSON, ToJSON)
 
--- | Data for the index page
-data IndexInfo =
-  IndexInfo
-    { posts             :: [Post]
+-- | A tag or category link rendered from a particular page depth.
+data TaxonomyLink = TaxonomyLink
+  { taxonomyName :: String
+  , taxonomyUrl  :: String
+  } deriving (Generic, Show, ToJSON)
+
+-- | A post as it appears in a listing page. Its links are made relative to
+-- the page being rendered, so the same template works at /, /tag/*, and
+-- /category/*.
+data ListingPost = ListingPost
+  { entryTitle  :: String
+  , entryAuthor :: String
+  , listingUrl :: String
+  , entryDate   :: String
+  , entryImage  :: Maybe String
+  , entryTags   :: [TaxonomyLink]
+  , entryCategory :: TaxonomyLink
+  } deriving (Generic, Show, ToJSON)
+
+-- | Data shared by the home page and taxonomy listing pages.
+data ListingInfo = ListingInfo
+    { listingTitle      :: String
+    , sitePrefix        :: String
+    , posts             :: [ListingPost]
     , tagCloud          :: [TagCount]
+    , categoryCloud     :: [TaxonomyLink]
+    , showTaxonomy      :: Bool
     , indexPostsPerPage :: Int
-    } deriving (Generic, Show, FromJSON, ToJSON)
+    } deriving (Generic, Show, ToJSON)
 
 -- | Data for a blog post.
 -- `tags` is optional (`Maybe [String]`) so posts written before you
@@ -60,6 +84,7 @@ data Post =
          , date    :: String
          , image   :: Maybe String
          , tags    :: Maybe [String]
+         , category :: String
          }
     deriving (Generic, Eq, Ord, Show, FromJSON, ToJSON, Binary)
 
@@ -78,7 +103,10 @@ postTags = maybe [] id . tags
 -- | Build a tag cloud from every post's tags: alphabetical and deduped,
 -- with a 1-5 "weight" bucket sized relative to the most-used tag.
 buildTagCloud :: [Post] -> [TagCount]
-buildTagCloud ps =
+buildTagCloud = buildTagCloudAt ""
+
+buildTagCloudAt :: FilePath -> [Post] -> [TagCount]
+buildTagCloudAt pathPrefix ps =
   let counts   = Map.toAscList . Map.fromListWith (+) $
                    [ (t, 1 :: Int) | p <- ps, t <- postTags p ]
       allCounts = map snd counts
@@ -89,22 +117,67 @@ buildTagCloud ps =
         | otherwise =
             1 + round (4 * fromIntegral (n - minCount)
                          / fromIntegral (maxCount - minCount) :: Double)
-  in [ TagCount t n (bucket n) | (t, n) <- counts ]
+  in [ TagCount t n (bucket n) (pathPrefix </> "tag" </> routeSegment t </> "")
+     | (t, n) <- counts
+     ]
 
--- | Build the index page with the newest posts first. Client-side JavaScript
--- uses `indexPostsPerPage` to paginate the rendered entries without loading a
--- separate index document.
+buildCategoryCloudAt :: FilePath -> [Post] -> [TaxonomyLink]
+buildCategoryCloudAt pathPrefix ps =
+  [ TaxonomyLink c (pathPrefix </> "category" </> routeSegment c </> "")
+  | c <- Map.keys . Map.fromList $ [ (category p, ()) | p <- ps ]
+  ]
+
+routeSegment :: String -> String
+routeSegment = intercalate "-" . words . map toSafeChar
+  where
+    toSafeChar c | isAlphaNum c = toLower c
+                 | otherwise    = ' '
+
+listingPost :: FilePath -> Post -> ListingPost
+listingPost pathPrefix post = ListingPost
+  { entryTitle = title post
+  , entryAuthor = author post
+  , listingUrl = pathPrefix </> url post
+  , entryDate = date post
+  , entryImage = fmap (pathPrefix </>) (image post)
+  , entryTags = [ TaxonomyLink t (pathPrefix </> "tag" </> routeSegment t </> "")
+           | t <- postTags post
+           ]
+  , entryCategory = TaxonomyLink (category post)
+      (pathPrefix </> "category" </> routeSegment (category post) </> "")
+  }
+
 buildIndex :: [Post] -> Action ()
-buildIndex posts' = do
-  indexT <- compileTemplate' "site/templates/index.html"
-  let sortedPosts = sortPostsByDate posts'
-      indexInfo = IndexInfo
-        { posts = sortedPosts
-        , tagCloud = buildTagCloud sortedPosts
+buildIndex posts' = writeListing "index.html" "" "Field Notes" True posts' posts'
+
+buildTagPages :: [Post] -> Action ()
+buildTagPages allPosts =
+  void . forP (Map.keys . Map.fromList $ [ (t, ()) | p <- allPosts, t <- postTags p ]) $ \t ->
+    writeListing ("tag" </> routeSegment t </> "index.html") "../../"
+      ("Posts tagged “" <> t <> "”") False allPosts
+      (filter (elem t . postTags) allPosts)
+
+buildCategoryPages :: [Post] -> Action ()
+buildCategoryPages allPosts =
+  void . forP (Map.keys . Map.fromList $ [ (category p, ()) | p <- allPosts ]) $ \c ->
+    writeListing ("category" </> routeSegment c </> "index.html") "../../"
+      ("Posts in “" <> c <> "”") False allPosts
+      (filter ((== c) . category) allPosts)
+
+writeListing :: FilePath -> FilePath -> String -> Bool -> [Post] -> [Post] -> Action ()
+writeListing destination pathPrefix heading includeTaxonomy allPosts listingPosts = do
+  listingT <- compileTemplate' "site/templates/index.html"
+  let listingInfo = ListingInfo
+        { listingTitle = heading
+        , sitePrefix = pathPrefix
+        , posts = map (listingPost pathPrefix) (sortPostsByDate listingPosts)
+        , tagCloud = buildTagCloudAt pathPrefix allPosts
+        , categoryCloud = buildCategoryCloudAt pathPrefix allPosts
+        , showTaxonomy = includeTaxonomy
         , indexPostsPerPage = postsPerIndexPage
         }
-      indexHTML = T.unpack $ substitute indexT (toJSON indexInfo)
-  writeFile' (outputFolder </> "index.html") indexHTML
+  writeFile' (outputFolder </> destination) . T.unpack $
+    substitute listingT (toJSON listingInfo)
 
 -- | Parse the date formats used by the starter posts.  Posts with an
 -- unrecognised date are kept at the end of the index rather than preventing
@@ -154,6 +227,11 @@ writePost :: Post -> Maybe Post -> Maybe Post -> Action ()
 writePost post previousPost nextPost = do
   template <- compileTemplate' "site/templates/post.html"
   let postData = toJSON post
+        & _Object . at "tags" ?~ toJSON
+            [ TaxonomyLink t ("../tag" </> routeSegment t </> "") | t <- postTags post ]
+        & _Object . at "category" ?~ toJSON
+            (TaxonomyLink (category post)
+              ("../category" </> routeSegment (category post) </> ""))
       withNavigation = postData
         & _Object . at "previousPost" ?~ maybe Null (toJSON . postLink) previousPost
         & _Object . at "nextPost" ?~ maybe Null (toJSON . postLink) nextPost
@@ -179,6 +257,8 @@ buildRules :: Action ()
 buildRules = do
   allPosts <- buildPosts
   buildIndex allPosts
+  buildTagPages allPosts
+  buildCategoryPages allPosts
   copyStaticFiles
 
 main :: IO ()

@@ -205,6 +205,7 @@ ul, ol { padding-left: 1.2em; }
   color: var(--ink-soft);
   margin: 0 0 .9rem;
 }
+.category-cloud-label { margin-top: 1.5rem; }
 .tag-cloud {
   display: flex;
   flex-wrap: wrap;
@@ -234,11 +235,6 @@ ul, ol { padding-left: 1.2em; }
   white-space: nowrap;
 }
 .tag-pill:hover { border-color: var(--accent2); color: var(--ink); }
-.tag-pill.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-ink);
-}
 .tag-pill .tag-count {
   font-family: var(--font-mono);
   font-size: .78em;
@@ -251,26 +247,6 @@ ul, ol { padding-left: 1.2em; }
 .tag-pill.tag-size-4 { font-size: 1.14rem; font-weight: 500; }
 .tag-pill.tag-size-5 { font-size: 1.3rem; font-weight: 600; color: var(--ink); }
 
-.filter-status {
-  margin: 1rem 0 0;
-  font-family: var(--font-ui);
-  font-size: .88rem;
-  color: var(--ink-soft);
-}
-.filter-status strong { color: var(--ink); font-weight: 600; }
-.filter-status[hidden] { display: none; }
-.filter-status button {
-  font-family: var(--font-mono);
-  font-size: .82rem;
-  color: var(--accent2);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.filter-status button:hover { color: var(--accent); }
 
 /* -- tag chips (small, inline — post cards + post page) -- */
 .chip {
@@ -306,7 +282,6 @@ a.chip:hover { border-color: var(--accent2); color: var(--accent2); }
   color: inherit;
 }
 .entry:first-child { padding-top: 0; }
-.entry.is-hidden { display: none; }
 .entry.is-page-hidden { display: none; }
 .entry-date {
   font-family: var(--font-mono);
@@ -342,7 +317,7 @@ a.chip:hover { border-color: var(--accent2); color: var(--accent2); }
 }
 .pagination-link-next { text-align: right; }
 .pagination-status { color: var(--ink-faint); text-align: center; }
-.pagination-link:disabled { color: var(--ink-faint); cursor: default; }
+.pagination-link.is-disabled { color: var(--ink-faint); cursor: default; pointer-events: none; }
 .entry-body h2 {
   font-size: clamp(1.35rem, 2.4vw, 1.7rem);
   margin-bottom: .4rem;

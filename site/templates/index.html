@@ -6,17 +6,17 @@
   <title>Field Notes — a Slick blog</title>
   <meta name="description" content="Notes on code, tools, and things worth writing down." />
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="{{sitePrefix}}css/style.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="index.html">
+      <a class="brand" href="{{sitePrefix}}index.html?page=0">
         <span class="brand-mark">λ</span>
         <span class="brand-name">Field Notes</span>
       </a>
       <nav class="nav-links">
-        <a href="index.html"><span class="nav-label">Writing</span></a>
+        <a href="{{sitePrefix}}index.html?page=0"><span class="nav-label">Writing</span></a>
         <a href="https://github.com/" target="_blank" rel="noopener"><span class="nav-label">Source</span></a>
         <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle color theme">☾</button>
       </nav>
@@ -27,44 +27,49 @@
     <section class="hero">
       <div class="col" style="max-width: 1040px;">
         <p class="eyebrow">field notes</p>
-        <h1>Short essays on code, built statically, shipped without a database.</h1>
-        <p>A running log of things worth writing down — compiled with Slick, deployed as flat files, read at your own pace.</p>
+        <h1>{{listingTitle}}</h1>
+        <p>Short essays on code, built statically, shipped without a database.</p>
       </div>
     </section>
 
+    {{#showTaxonomy}}
     <section class="tag-cloud-section">
       <div class="col" style="max-width: 1040px;">
         <p class="tag-cloud-label">browse by tag</p>
         <div class="tag-cloud">
           {{#tagCloud}}
-          <a class="tag-pill tag-size-{{weight}}" href="#tag-{{tag}}" data-tag="{{tag}}">{{tag}} <span class="tag-count">{{count}}</span></a>
+          <a class="tag-pill tag-size-{{weight}}" href="{{tagUrl}}?page=0">{{tag}} <span class="tag-count">{{count}}</span></a>
           {{/tagCloud}}
           {{^tagCloud}}
           <span class="tag-cloud-empty">Add <code>tags: [...]</code> to a post's frontmatter to populate this.</span>
           {{/tagCloud}}
         </div>
-        <p class="filter-status" data-filter-status hidden>
-          Showing posts tagged <strong data-filter-tag></strong> — <button type="button" data-clear-filter>clear</button>
-        </p>
+        <p class="tag-cloud-label category-cloud-label">browse by category</p>
+        <div class="tag-cloud">
+          {{#categoryCloud}}
+          <a class="tag-pill" href="{{taxonomyUrl}}?page=0">{{taxonomyName}}</a>
+          {{/categoryCloud}}
+        </div>
       </div>
     </section>
+    {{/showTaxonomy}}
 
     <section class="entries">
       <div class="col" style="max-width: 1040px;">
         <nav class="pagination pagination-top" aria-label="Post pages" data-pagination data-posts-per-page="{{indexPostsPerPage}}" hidden>
-          <button class="pagination-link" type="button" data-page-previous>← Newer posts</button>
+          <a class="pagination-link" data-page-previous>← Newer posts</a>
           <span class="pagination-status" data-page-status></span>
-          <button class="pagination-link pagination-link-next" type="button" data-page-next>Older posts →</button>
+          <a class="pagination-link pagination-link-next" data-page-next>Older posts →</a>
         </nav>
 
         {{#posts}}
-        <a class="entry" href="{{url}}" data-tags="{{#tags}}{{.}} {{/tags}}">
-          <span class="entry-date">{{date}}</span>
+        <a class="entry" href="{{listingUrl}}">
+            <span class="entry-date">{{entryDate}}</span>
           <span class="entry-body">
-            <h2>{{title}}<span class="entry-arrow">&nbsp;→</span></h2>
-            <span class="entry-meta">by {{author}}</span>
-            <span class="entry-tags">{{#tags}}<span class="chip">{{.}}</span>{{/tags}}</span>
-            {{#image}}<img class="entry-cover" src="{{image}}" alt="" loading="lazy" />{{/image}}
+            <h2>{{entryTitle}}<span class="entry-arrow">&nbsp;→</span></h2>
+            <span class="entry-meta">by {{entryAuthor}}</span>
+            <span class="entry-tags"><a class="chip" href="{{entryCategory.taxonomyUrl}}?page=0">{{entryCategory.taxonomyName}}</a>{{#entryTags}}<a class="chip" href="{{taxonomyUrl}}?page=0">{{taxonomyName}}</a>{{/entryTags}}</span>
+            {{#entryImage}}<img class="entry-cover" src="{{entryImage}}" alt="" loading="lazy" />{{/entryImage}}
           </span>
         </a>
         {{/posts}}
@@ -73,9 +78,9 @@
         {{/posts}}
 
         <nav class="pagination" aria-label="Post pages" data-pagination data-posts-per-page="{{indexPostsPerPage}}" hidden>
-          <button class="pagination-link" type="button" data-page-previous>← Newer posts</button>
+          <a class="pagination-link" data-page-previous>← Newer posts</a>
           <span class="pagination-status" data-page-status></span>
-          <button class="pagination-link pagination-link-next" type="button" data-page-next>Older posts →</button>
+          <a class="pagination-link pagination-link-next" data-page-next>Older posts →</a>
         </nav>
       </div>
     </section>
@@ -86,11 +91,11 @@
       <span class="build-stamp">built with Slick + Shake + GHC</span>
       <span class="footer-links">
         <a href="https://github.com/ChrisPenner/slick" target="_blank" rel="noopener">slick</a>
-        <a href="index.html#top">top</a>
+        <a href="{{sitePrefix}}index.html?page=0">top</a>
       </span>
     </div>
   </footer>
 
-  <script src="js/main.js"></script>
+  <script src="{{sitePrefix}}js/main.js"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@ title: "Swift Protocol-Oriented Design"
 author: "Your Name"
 date: Jul 31, 2026
 tags: [swift, ios]
+category: ios
 description: Lorem ipsum dolor sit amet.
 ---
 

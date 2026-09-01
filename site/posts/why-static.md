@@ -3,6 +3,7 @@ title: "Why I Went Back to Static Files"
 author: "Your Name"
 date: Jul 12, 2026
 tags: [slick, site]
+category: site
 description: My first blog post using slick
 image: "images/cover-graph.svg"
 ---

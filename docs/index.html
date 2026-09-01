@@ -11,12 +11,12 @@
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="index.html">
+      <a class="brand" href="index.html?page=0">
         <span class="brand-mark">λ</span>
         <span class="brand-name">Field Notes</span>
       </a>
       <nav class="nav-links">
-        <a href="index.html"><span class="nav-label">Writing</span></a>
+        <a href="index.html?page=0"><span class="nav-label">Writing</span></a>
         <a href="https://github.com/" target="_blank" rel="noopener"><span class="nav-label">Source</span></a>
         <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle color theme">☾</button>
       </nav>
@@ -27,8 +27,8 @@
     <section class="hero">
       <div class="col" style="max-width: 1040px;">
         <p class="eyebrow">field notes</p>
-        <h1>Short essays on code, built statically, shipped without a database.</h1>
-        <p>A running log of things worth writing down — compiled with Slick, deployed as flat files, read at your own pace.</p>
+        <h1>Field Notes</h1>
+        <p>Short essays on code, built statically, shipped without a database.</p>
       </div>
     </section>
 
@@ -36,154 +36,162 @@
       <div class="col" style="max-width: 1040px;">
         <p class="tag-cloud-label">browse by tag</p>
         <div class="tag-cloud">
-          <a class="tag-pill tag-size-1" href="#tag-backend" data-tag="backend">backend <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-5" href="#tag-concurrency" data-tag="concurrency">concurrency <span class="tag-count">2</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-cpp" data-tag="cpp">cpp <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-data" data-tag="data">data <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-elixir" data-tag="elixir">elixir <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-first" data-tag="first">first <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-5" href="#tag-functional" data-tag="functional">functional <span class="tag-count">2</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-go" data-tag="go">go <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-haskell" data-tag="haskell">haskell <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-ios" data-tag="ios">ios <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-kotlin" data-tag="kotlin">kotlin <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-python" data-tag="python">python <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-rust" data-tag="rust">rust <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-scala" data-tag="scala">scala <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-5" href="#tag-site" data-tag="site">site <span class="tag-count">2</span></a>
-          <a class="tag-pill tag-size-5" href="#tag-slick" data-tag="slick">slick <span class="tag-count">2</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-swift" data-tag="swift">swift <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-5" href="#tag-systems" data-tag="systems">systems <span class="tag-count">2</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-typescript" data-tag="typescript">typescript <span class="tag-count">1</span></a>
-          <a class="tag-pill tag-size-1" href="#tag-web" data-tag="web">web <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/backend?page=0">backend <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-5" href="tag/concurrency?page=0">concurrency <span class="tag-count">2</span></a>
+          <a class="tag-pill tag-size-1" href="tag/cpp?page=0">cpp <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/data?page=0">data <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/elixir?page=0">elixir <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/first?page=0">first <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-5" href="tag/functional?page=0">functional <span class="tag-count">2</span></a>
+          <a class="tag-pill tag-size-1" href="tag/go?page=0">go <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/haskell?page=0">haskell <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/ios?page=0">ios <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/kotlin?page=0">kotlin <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/python?page=0">python <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/rust?page=0">rust <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/scala?page=0">scala <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-5" href="tag/site?page=0">site <span class="tag-count">2</span></a>
+          <a class="tag-pill tag-size-5" href="tag/slick?page=0">slick <span class="tag-count">2</span></a>
+          <a class="tag-pill tag-size-1" href="tag/swift?page=0">swift <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-5" href="tag/systems?page=0">systems <span class="tag-count">2</span></a>
+          <a class="tag-pill tag-size-1" href="tag/typescript?page=0">typescript <span class="tag-count">1</span></a>
+          <a class="tag-pill tag-size-1" href="tag/web?page=0">web <span class="tag-count">1</span></a>
         </div>
-        <p class="filter-status" data-filter-status hidden>
-          Showing posts tagged <strong data-filter-tag></strong> — <button type="button" data-clear-filter>clear</button>
-        </p>
+        <p class="tag-cloud-label category-cloud-label">browse by category</p>
+        <div class="tag-cloud">
+          <a class="tag-pill" href="category/backend?page=0">backend</a>
+          <a class="tag-pill" href="category/data?page=0">data</a>
+          <a class="tag-pill" href="category/functional?page=0">functional</a>
+          <a class="tag-pill" href="category/ios?page=0">ios</a>
+          <a class="tag-pill" href="category/programming?page=0">programming</a>
+          <a class="tag-pill" href="category/site?page=0">site</a>
+          <a class="tag-pill" href="category/systems?page=0">systems</a>
+          <a class="tag-pill" href="category/web?page=0">web</a>
+        </div>
       </div>
     </section>
 
     <section class="entries">
       <div class="col" style="max-width: 1040px;">
         <nav class="pagination pagination-top" aria-label="Post pages" data-pagination data-posts-per-page="5" hidden>
-          <button class="pagination-link" type="button" data-page-previous>← Newer posts</button>
+          <a class="pagination-link" data-page-previous>← Newer posts</a>
           <span class="pagination-status" data-page-status></span>
-          <button class="pagination-link pagination-link-next" type="button" data-page-next>Older posts →</button>
+          <a class="pagination-link pagination-link-next" data-page-next>Older posts →</a>
         </nav>
 
-        <a class="entry" href="posts/rust-ownership-patterns.html" data-tags="rust systems ">
-          <span class="entry-date">Aug 18, 2026</span>
+        <a class="entry" href="posts/rust-ownership-patterns.html">
+            <span class="entry-date">Aug 18, 2026</span>
           <span class="entry-body">
             <h2>Rust Ownership Patterns<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">rust</span><span class="chip">systems</span></span>
+            <span class="entry-tags"><a class="chip" href="category/systems?page=0">systems</a><a class="chip" href="tag/rust?page=0">rust</a><a class="chip" href="tag/systems?page=0">systems</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/haskell-typeclasses.html" data-tags="haskell functional ">
-          <span class="entry-date">Aug 15, 2026</span>
+        <a class="entry" href="posts/haskell-typeclasses.html">
+            <span class="entry-date">Aug 15, 2026</span>
           <span class="entry-body">
             <h2>Haskell Typeclasses in Practice<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">haskell</span><span class="chip">functional</span></span>
+            <span class="entry-tags"><a class="chip" href="category/functional?page=0">functional</a><a class="chip" href="tag/haskell?page=0">haskell</a><a class="chip" href="tag/functional?page=0">functional</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/python-data-pipelines.html" data-tags="python data ">
-          <span class="entry-date">Aug 12, 2026</span>
+        <a class="entry" href="posts/python-data-pipelines.html">
+            <span class="entry-date">Aug 12, 2026</span>
           <span class="entry-body">
             <h2>Python Data Pipeline Basics<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">python</span><span class="chip">data</span></span>
+            <span class="entry-tags"><a class="chip" href="category/data?page=0">data</a><a class="chip" href="tag/python?page=0">python</a><a class="chip" href="tag/data?page=0">data</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/typescript-api-contracts.html" data-tags="typescript web ">
-          <span class="entry-date">Aug 9, 2026</span>
+        <a class="entry" href="posts/typescript-api-contracts.html">
+            <span class="entry-date">Aug 9, 2026</span>
           <span class="entry-body">
             <h2>TypeScript API Contracts<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">typescript</span><span class="chip">web</span></span>
+            <span class="entry-tags"><a class="chip" href="category/web?page=0">web</a><a class="chip" href="tag/typescript?page=0">typescript</a><a class="chip" href="tag/web?page=0">web</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/go-concurrency.html" data-tags="go concurrency ">
-          <span class="entry-date">Aug 6, 2026</span>
+        <a class="entry" href="posts/go-concurrency.html">
+            <span class="entry-date">Aug 6, 2026</span>
           <span class="entry-body">
             <h2>Go Concurrency Patterns<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">go</span><span class="chip">concurrency</span></span>
+            <span class="entry-tags"><a class="chip" href="category/backend?page=0">backend</a><a class="chip" href="tag/go?page=0">go</a><a class="chip" href="tag/concurrency?page=0">concurrency</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/kotlin-coroutines.html" data-tags="kotlin concurrency ">
-          <span class="entry-date">Aug 3, 2026</span>
+        <a class="entry" href="posts/kotlin-coroutines.html">
+            <span class="entry-date">Aug 3, 2026</span>
           <span class="entry-body">
             <h2>Kotlin Coroutines Explained<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">kotlin</span><span class="chip">concurrency</span></span>
+            <span class="entry-tags"><a class="chip" href="category/programming?page=0">programming</a><a class="chip" href="tag/kotlin?page=0">kotlin</a><a class="chip" href="tag/concurrency?page=0">concurrency</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/swift-protocols.html" data-tags="swift ios ">
-          <span class="entry-date">Jul 31, 2026</span>
+        <a class="entry" href="posts/swift-protocols.html">
+            <span class="entry-date">Jul 31, 2026</span>
           <span class="entry-body">
             <h2>Swift Protocol-Oriented Design<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">swift</span><span class="chip">ios</span></span>
+            <span class="entry-tags"><a class="chip" href="category/ios?page=0">ios</a><a class="chip" href="tag/swift?page=0">swift</a><a class="chip" href="tag/ios?page=0">ios</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/hello-world.html" data-tags="slick site first ">
-          <span class="entry-date">Jul 29, 2026</span>
+        <a class="entry" href="posts/hello-world.html">
+            <span class="entry-date">Jul 29, 2026</span>
           <span class="entry-body">
             <h2>Hello, Static World<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">slick</span><span class="chip">site</span><span class="chip">first</span></span>
+            <span class="entry-tags"><a class="chip" href="category/site?page=0">site</a><a class="chip" href="tag/slick?page=0">slick</a><a class="chip" href="tag/site?page=0">site</a><a class="chip" href="tag/first?page=0">first</a></span>
             <img class="entry-cover" src="images/cover-lambda.svg" alt="" loading="lazy" />
           </span>
         </a>
-        <a class="entry" href="posts/cpp-modern-memory.html" data-tags="cpp systems ">
-          <span class="entry-date">Jul 27, 2026</span>
+        <a class="entry" href="posts/cpp-modern-memory.html">
+            <span class="entry-date">Jul 27, 2026</span>
           <span class="entry-body">
             <h2>Modern C++ Memory Safety<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">cpp</span><span class="chip">systems</span></span>
+            <span class="entry-tags"><a class="chip" href="category/systems?page=0">systems</a><a class="chip" href="tag/cpp?page=0">cpp</a><a class="chip" href="tag/systems?page=0">systems</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/elixir-fault-tolerance.html" data-tags="elixir backend ">
-          <span class="entry-date">Jul 23, 2026</span>
+        <a class="entry" href="posts/elixir-fault-tolerance.html">
+            <span class="entry-date">Jul 23, 2026</span>
           <span class="entry-body">
             <h2>Elixir Fault-Tolerant Services<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">elixir</span><span class="chip">backend</span></span>
+            <span class="entry-tags"><a class="chip" href="category/backend?page=0">backend</a><a class="chip" href="tag/elixir?page=0">elixir</a><a class="chip" href="tag/backend?page=0">backend</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/scala-functional-design.html" data-tags="scala functional ">
-          <span class="entry-date">Jul 19, 2026</span>
+        <a class="entry" href="posts/scala-functional-design.html">
+            <span class="entry-date">Jul 19, 2026</span>
           <span class="entry-body">
             <h2>Scala Functional Design<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">scala</span><span class="chip">functional</span></span>
+            <span class="entry-tags"><a class="chip" href="category/functional?page=0">functional</a><a class="chip" href="tag/scala?page=0">scala</a><a class="chip" href="tag/functional?page=0">functional</a></span>
             
           </span>
         </a>
-        <a class="entry" href="posts/why-static.html" data-tags="slick site ">
-          <span class="entry-date">Jul 12, 2026</span>
+        <a class="entry" href="posts/why-static.html">
+            <span class="entry-date">Jul 12, 2026</span>
           <span class="entry-body">
             <h2>Why I Went Back to Static Files<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by Your Name</span>
-            <span class="entry-tags"><span class="chip">slick</span><span class="chip">site</span></span>
+            <span class="entry-tags"><a class="chip" href="category/site?page=0">site</a><a class="chip" href="tag/slick?page=0">slick</a><a class="chip" href="tag/site?page=0">site</a></span>
             <img class="entry-cover" src="images/cover-graph.svg" alt="" loading="lazy" />
           </span>
         </a>
 
         <nav class="pagination" aria-label="Post pages" data-pagination data-posts-per-page="5" hidden>
-          <button class="pagination-link" type="button" data-page-previous>← Newer posts</button>
+          <a class="pagination-link" data-page-previous>← Newer posts</a>
           <span class="pagination-status" data-page-status></span>
-          <button class="pagination-link pagination-link-next" type="button" data-page-next>Older posts →</button>
+          <a class="pagination-link pagination-link-next" data-page-next>Older posts →</a>
         </nav>
       </div>
     </section>
@@ -194,7 +202,7 @@
       <span class="build-stamp">built with Slick + Shake + GHC</span>
       <span class="footer-links">
         <a href="https://github.com/ChrisPenner/slick" target="_blank" rel="noopener">slick</a>
-        <a href="index.html#top">top</a>
+        <a href="index.html?page=0">top</a>
       </span>
     </div>
   </footer>

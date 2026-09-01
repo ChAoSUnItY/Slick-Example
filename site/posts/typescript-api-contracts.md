@@ -3,6 +3,7 @@ title: "TypeScript API Contracts"
 author: "Your Name"
 date: Aug 9, 2026
 tags: [typescript, web]
+category: web
 description: Lorem ipsum dolor sit amet.
 ---
 

@@ -3,6 +3,7 @@ title: "Scala Functional Design"
 author: "Your Name"
 date: Jul 19, 2026
 tags: [scala, functional]
+category: functional
 description: Lorem ipsum dolor sit amet.
 ---
 

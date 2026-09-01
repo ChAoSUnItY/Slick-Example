@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Field Notes — a Slick blog</title>
+  <meta name="description" content="Notes on code, tools, and things worth writing down." />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="../../css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="../../index.html?page=0">
+        <span class="brand-mark">λ</span>
+        <span class="brand-name">Field Notes</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../../index.html?page=0"><span class="nav-label">Writing</span></a>
+        <a href="https://github.com/" target="_blank" rel="noopener"><span class="nav-label">Source</span></a>
+        <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle color theme">☾</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="col" style="max-width: 1040px;">
+        <p class="eyebrow">field notes</p>
+        <h1>Posts tagged “web”</h1>
+        <p>Short essays on code, built statically, shipped without a database.</p>
+      </div>
+    </section>
+
+
+    <section class="entries">
+      <div class="col" style="max-width: 1040px;">
+        <nav class="pagination pagination-top" aria-label="Post pages" data-pagination data-posts-per-page="5" hidden>
+          <a class="pagination-link" data-page-previous>← Newer posts</a>
+          <span class="pagination-status" data-page-status></span>
+          <a class="pagination-link pagination-link-next" data-page-next>Older posts →</a>
+        </nav>
+
+        <a class="entry" href="../../posts/typescript-api-contracts.html">
+            <span class="entry-date">Aug 9, 2026</span>
+          <span class="entry-body">
+            <h2>TypeScript API Contracts<span class="entry-arrow">&nbsp;→</span></h2>
+            <span class="entry-meta">by Your Name</span>
+            <span class="entry-tags"><a class="chip" href="../../category/web?page=0">web</a><a class="chip" href="../../tag/typescript?page=0">typescript</a><a class="chip" href="../../tag/web?page=0">web</a></span>
+            
+          </span>
+        </a>
+
+        <nav class="pagination" aria-label="Post pages" data-pagination data-posts-per-page="5" hidden>
+          <a class="pagination-link" data-page-previous>← Newer posts</a>
+          <span class="pagination-status" data-page-status></span>
+          <a class="pagination-link pagination-link-next" data-page-next>Older posts →</a>
+        </nav>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="build-stamp">built with Slick + Shake + GHC</span>
+      <span class="footer-links">
+        <a href="https://github.com/ChrisPenner/slick" target="_blank" rel="noopener">slick</a>
+        <a href="../../index.html?page=0">top</a>
+      </span>
+    </div>
+  </footer>
+
+  <script src="../../js/main.js"></script>
+</body>
+</html>

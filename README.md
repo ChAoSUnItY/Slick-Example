@@ -30,6 +30,14 @@ $ serve docs
 
 Then navigate to the port which is serving (usually http://localhost:3000 or http://localhost:5000 )
 
+## Posts, taxonomy, and pagination
+
+Each post needs exactly one `category` in its YAML front matter and may have
+multiple `tags`. The build creates listing pages at `/tag/<tag>/` and
+`/category/<category>/`. Listings use zero-based query-string pagination:
+`?page=0` is the newest page, and out-of-range page values are redirected to
+the nearest valid page.
+
 
 ---
 

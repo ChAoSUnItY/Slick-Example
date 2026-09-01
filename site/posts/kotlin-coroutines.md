@@ -3,6 +3,7 @@ title: "Kotlin Coroutines Explained"
 author: "Your Name"
 date: Aug 3, 2026
 tags: [kotlin, concurrency]
+category: programming
 description: Lorem ipsum dolor sit amet.
 ---
 

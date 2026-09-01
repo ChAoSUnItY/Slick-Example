@@ -3,6 +3,7 @@ title: "Hello, Static World"
 author: "Your Name"
 date: Jul 29, 2026
 tags: [slick, site, first]
+category: site
 description: My first blog post using slick
 image: "images/cover-lambda.svg"
 ---

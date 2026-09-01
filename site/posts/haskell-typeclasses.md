@@ -3,6 +3,7 @@ title: "Haskell Typeclasses in Practice"
 author: "Your Name"
 date: Aug 15, 2026
 tags: [haskell, functional]
+category: functional
 description: Lorem ipsum dolor sit amet.
 ---
 
