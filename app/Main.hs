@@ -5,17 +5,15 @@
 module Main where
 
 import           Control.Lens
-import           Control.Monad
 import           Control.Applicative        ((<|>))
 import           Data.Aeson                 as A
 import           Data.Aeson.Lens
 import           Data.Char                  (isAlphaNum, toLower)
-import           Data.List                  (intercalate, sortBy)
+import           Data.List                  (find, intercalate, sortBy)
 import qualified Data.Map.Strict            as Map
 import           Data.Time                  (Day, defaultTimeLocale, parseTimeM)
 import           Development.Shake
 import           Development.Shake.Classes (Binary)
-import           Development.Shake.Forward
 import           Development.Shake.FilePath
 import           GHC.Generics               (Generic)
 import           Slick
@@ -88,6 +86,14 @@ data Post =
          }
     deriving (Generic, Eq, Ord, Show, FromJSON, ToJSON, Binary)
 
+-- | Source paths and their parsed posts travel together through the build.
+-- `orderedPosts` is newest-first, which is also the order wanted by every
+-- listing and by post navigation.
+data LoadedPosts = LoadedPosts
+  { postFiles    :: [FilePath]
+  , orderedPosts :: [Post]
+  }
+
 -- | A link to a neighbouring post. The URL is relative to a page in
 -- `docs/posts/`, unlike `Post.url`, which is relative to the site root.
 data PostLink =
@@ -147,36 +153,19 @@ listingPost pathPrefix post = ListingPost
       (pathPrefix </> "category" </> routeSegment (category post) </> "")
   }
 
-buildIndex :: [Post] -> Action ()
-buildIndex posts' = writeListing "index.html" "" "Field Notes" True posts' posts'
-
-buildTagPages :: [Post] -> Action ()
-buildTagPages allPosts =
-  void . forP (Map.keys . Map.fromList $ [ (t, ()) | p <- allPosts, t <- postTags p ]) $ \t ->
-    writeListing ("tag" </> routeSegment t </> "index.html") "../../"
-      ("Posts tagged “" <> t <> "”") False allPosts
-      (filter (elem t . postTags) allPosts)
-
-buildCategoryPages :: [Post] -> Action ()
-buildCategoryPages allPosts =
-  void . forP (Map.keys . Map.fromList $ [ (category p, ()) | p <- allPosts ]) $ \c ->
-    writeListing ("category" </> routeSegment c </> "index.html") "../../"
-      ("Posts in “" <> c <> "”") False allPosts
-      (filter ((== c) . category) allPosts)
-
 writeListing :: FilePath -> FilePath -> String -> Bool -> [Post] -> [Post] -> Action ()
 writeListing destination pathPrefix heading includeTaxonomy allPosts listingPosts = do
   listingT <- compileTemplate' "site/templates/index.html"
   let listingInfo = ListingInfo
         { listingTitle = heading
         , sitePrefix = pathPrefix
-        , posts = map (listingPost pathPrefix) (sortPostsByDate listingPosts)
+        , posts = map (listingPost pathPrefix) listingPosts
         , tagCloud = buildTagCloudAt pathPrefix allPosts
         , categoryCloud = buildCategoryCloudAt pathPrefix allPosts
         , showTaxonomy = includeTaxonomy
         , indexPostsPerPage = postsPerIndexPage
         }
-  writeFile' (outputFolder </> destination) . T.unpack $
+  writeFile' destination . T.unpack $
     substitute listingT (toJSON listingInfo)
 
 -- | Parse the date formats used by the starter posts.  Posts with an
@@ -196,24 +185,17 @@ postDate post =
 sortPostsByDate :: [Post] -> [Post]
 sortPostsByDate = sortBy $ \a b -> compare (postDate b) (postDate a)
 
--- | Find and build all posts
-buildPosts :: Action [Post]
-buildPosts = do
-  pPaths <- getDirectoryFiles "." ["site/posts//*.md"]
-  posts' <- forP pPaths loadPost
-  let sortedPosts = sortPostsByDate posts'
-      adjacentPosts = zip3
-        (Nothing : map Just sortedPosts)
-        sortedPosts
-        (map Just (drop 1 sortedPosts) ++ [Nothing])
-  void $ forP adjacentPosts $ \(newerPost, post, olderPost) ->
-    writePost post olderPost newerPost
-  pure sortedPosts
+-- | Load and order posts once. The `getDirectoryFiles` call is tracked by
+-- Shake, so adding or removing a source invalidates this collection too.
+loadPosts :: Action LoadedPosts
+loadPosts = do
+  files <- getDirectoryFiles "." ["site/posts//*.md"]
+  LoadedPosts files . sortPostsByDate <$> mapM loadPost files
 
 -- | Load and process a post's Markdown and frontmatter.
 loadPost :: FilePath -> Action Post
-loadPost srcPath = cacheAction ("load" :: T.Text, srcPath) $ do
-  liftIO . putStrLn $ "Loading post: " <> srcPath
+loadPost srcPath = do
+  announce "load source" srcPath
   postContent <- readFile' srcPath
   -- load post content and metadata as JSON blob
   postData <- markdownToHTML . T.pack $ postContent
@@ -244,24 +226,108 @@ postLink post = PostLink
   , linkUrl = dropDirectory1 (url post)
   }
 
--- | Copy all static files from the listed folders to their destination
-copyStaticFiles :: Action ()
-copyStaticFiles = do
-    filepaths <- getDirectoryFiles "./site/" ["images//*", "css//*", "js//*"]
-    void $ forP filepaths $ \filepath ->
-        copyFileChanged ("site" </> filepath) (outputFolder </> filepath)
+templateFiles :: Action ()
+templateFiles = getDirectoryFiles "." ["site/templates//*.html"] >>= need
 
--- | Specific build rules for the Shake system
---   defines workflow to build the website
-buildRules :: Action ()
+postOutput :: FilePath -> FilePath
+postOutput source = outputFolder </> dropDirectory1 (source -<.> "html")
+
+staticOutput :: FilePath -> FilePath
+staticOutput source = outputFolder </> dropDirectory1 source
+
+-- | Direct stdout messages make it easy to distinguish planning work from
+-- rules that actually regenerated an output file.
+announce :: String -> FilePath -> Action ()
+announce ruleName target =
+  liftIO . putStrLn $ "[" <> ruleName <> "] " <> target
+
+-- | Specific build rules for the Shake system.  Every file in docs is now an
+-- explicit target: Shake can consequently skip targets whose inputs have not
+-- changed, instead of running the complete renderer for every invocation.
+buildRules :: Rules ()
 buildRules = do
-  allPosts <- buildPosts
-  buildIndex allPosts
-  buildTagPages allPosts
-  buildCategoryPages allPosts
-  copyStaticFiles
+  want ["site"]
+  getPosts <- newCache (\() -> loadPosts)
+  let trackedPosts = do
+        loaded <- getPosts ()
+        need (postFiles loaded)
+        pure (orderedPosts loaded)
+
+  phony "site" $ do
+    announce "phony" "site"
+    loaded <- getPosts ()
+    need (postFiles loaded)
+    staticFiles <- getDirectoryFiles "." ["site/images//*", "site/css//*", "site/js//*"]
+    need $ "docs/index.html"
+         : map postOutput (postFiles loaded)
+        ++ map staticOutput staticFiles
+        ++ [ outputFolder </> "tag" </> routeSegment t </> "index.html"
+           | p <- orderedPosts loaded, t <- postTags p
+           ]
+        ++ [ outputFolder </> "category" </> routeSegment (category p) </> "index.html"
+           | p <- orderedPosts loaded
+           ]
+
+  "docs/index.html" %> \out -> do
+    announce "render index" out
+    templateFiles
+    allPosts <- trackedPosts
+    writeListing out "" "Field Notes" True allPosts allPosts
+
+  "docs/posts//*.html" %> \out -> do
+    announce "render post" out
+    templateFiles
+    let source = ("site/posts" </> makeRelative (outputFolder </> "posts") out) -<.> "md"
+    need [source]
+    allPosts <- trackedPosts
+    case find ((== dropDirectory1 out) . url) allPosts of
+      Nothing -> fail $ "No post source for " <> out
+      Just post -> do
+        let (newer, older) = neighbours post allPosts
+        writePost post older newer
+
+  "docs/tag/*/index.html" %> \out -> do
+    announce "render tag" out
+    templateFiles
+    allPosts <- trackedPosts
+    let segment = takeFileName . takeDirectory $ out
+        matchingTags = [ t | p <- allPosts, t <- postTags p, routeSegment t == segment ]
+    case matchingTags of
+      [] -> fail $ "No tag source for " <> out
+      (tagName:_) -> writeListing out "../../" ("Posts tagged “" <> tagName <> "”")
+                       False allPosts (filter (elem tagName . postTags) allPosts)
+
+  "docs/category/*/index.html" %> \out -> do
+    announce "render category" out
+    templateFiles
+    allPosts <- trackedPosts
+    let segment = takeFileName . takeDirectory $ out
+        matchingCategories = [ category p | p <- allPosts, routeSegment (category p) == segment ]
+    case matchingCategories of
+      [] -> fail $ "No category source for " <> out
+      (categoryName:_) -> writeListing out "../../" ("Posts in “" <> categoryName <> "”")
+                            False allPosts (filter ((== categoryName) . category) allPosts)
+
+  "docs/images//*" %> copyStatic
+  "docs/css//*"    %> copyStatic
+  "docs/js//*"     %> copyStatic
+  where
+    copyStatic out = do
+      announce "copy asset" out
+      let source = "site" </> makeRelative outputFolder out
+      need [source]
+      copyFileChanged source out
+
+neighbours :: Post -> [Post] -> (Maybe Post, Maybe Post)
+neighbours post posts' =
+  case dropWhile ((/= post) . snd) $ zip (Nothing : map Just posts') posts' of
+    ((newer, _) : rest) -> (newer, fmap snd (safeHead rest))
+    []                 -> (Nothing, Nothing)
+  where
+    safeHead []    = Nothing
+    safeHead (x:_) = Just x
 
 main :: IO ()
-main = shakeArgsForward
+main = shakeArgs
     shakeOptions { shakeLintInside = ["."] }
     buildRules

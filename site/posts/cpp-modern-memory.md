@@ -2,7 +2,7 @@
 title: "Modern C++ Memory Safety"
 author: "Your Name"
 date: Jul 27, 2026
-tags: [cpp, systems]
+tags: [cpp, systems, memory]
 category: systems
 description: Lorem ipsum dolor sit amet.
 ---
