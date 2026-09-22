@@ -19,6 +19,7 @@ import           GHC.Generics               (Generic)
 import           Slick
 
 import qualified Data.Text                  as T
+import Control.Monad (forM_)
 
 outputFolder :: FilePath
 outputFolder = "docs/"
@@ -86,14 +87,6 @@ data Post =
          }
     deriving (Generic, Eq, Ord, Show, FromJSON, ToJSON, Binary)
 
--- | Source paths and their parsed posts travel together through the build.
--- `orderedPosts` is newest-first, which is also the order wanted by every
--- listing and by post navigation.
-data LoadedPosts = LoadedPosts
-  { postFiles    :: [FilePath]
-  , orderedPosts :: [Post]
-  }
-
 -- | A link to a neighbouring post. The URL is relative to a page in
 -- `docs/posts/`, unlike `Post.url`, which is relative to the site root.
 data PostLink =
@@ -105,6 +98,12 @@ data PostLink =
 -- | A post's tags, defaulting to none.
 postTags :: Post -> [String]
 postTags = maybe [] id . tags
+
+groupPostsBy :: (Post -> [String]) -> [Post] -> Map.Map String [Post]
+groupPostsBy vals =
+  Map.fromListWith (flip (++)) . concatMap entries
+  where
+    entries post = [ (value, [post]) | value <- vals post ]
 
 -- | Build a tag cloud from every post's tags: alphabetical and deduped,
 -- with a 1-5 "weight" bucket sized relative to the most-used tag.
@@ -165,7 +164,7 @@ writeListing destination pathPrefix heading includeTaxonomy allPosts listingPost
         , showTaxonomy = includeTaxonomy
         , indexPostsPerPage = postsPerIndexPage
         }
-  writeFile' destination . T.unpack $
+  writeFileChanged destination . T.unpack $
     substitute listingT (toJSON listingInfo)
 
 -- | Parse the date formats used by the starter posts.  Posts with an
@@ -187,15 +186,19 @@ sortPostsByDate = sortBy $ \a b -> compare (postDate b) (postDate a)
 
 -- | Load and order posts once. The `getDirectoryFiles` call is tracked by
 -- Shake, so adding or removing a source invalidates this collection too.
-loadPosts :: Action LoadedPosts
+loadPosts :: Action [(FilePath, Post)]
 loadPosts = do
-  files <- getDirectoryFiles "." ["site/posts//*.md"]
-  LoadedPosts files . sortPostsByDate <$> mapM loadPost files
+  paths <- getDirectoryFiles "." ["site/posts//*.md"]
+  posts' <- mapM loadPost paths
+  return $
+    sortBy
+      (\(_, a) (_, b) -> compare (postDate b) (postDate a))
+      (zip paths posts')
 
 -- | Load and process a post's Markdown and frontmatter.
 loadPost :: FilePath -> Action Post
 loadPost srcPath = do
-  announce "load source" srcPath
+  announce "load/post" srcPath
   postContent <- readFile' srcPath
   -- load post content and metadata as JSON blob
   postData <- markdownToHTML . T.pack $ postContent
@@ -235,51 +238,85 @@ postOutput source = outputFolder </> dropDirectory1 (source -<.> "html")
 staticOutput :: FilePath -> FilePath
 staticOutput source = outputFolder </> dropDirectory1 source
 
--- | Direct stdout messages make it easy to distinguish planning work from
--- rules that actually regenerated an output file.
 announce :: String -> FilePath -> Action ()
 announce ruleName target =
   liftIO . putStrLn $ "[" <> ruleName <> "] " <> target
 
--- | Specific build rules for the Shake system.  Every file in docs is now an
--- explicit target: Shake can consequently skip targets whose inputs have not
--- changed, instead of running the complete renderer for every invocation.
 buildRules :: Rules ()
 buildRules = do
-  want ["site"]
-  getPosts <- newCache (\() -> loadPosts)
-  let trackedPosts = do
-        loaded <- getPosts ()
-        need (postFiles loaded)
-        pure (orderedPosts loaded)
+  want ["build"]
+  getPosts <- newCache $ const loadPosts
 
-  phony "site" $ do
-    announce "phony" "site"
-    loaded <- getPosts ()
-    need (postFiles loaded)
+  -- Let rule requires all posts, and returns
+  -- all loaded posts
+  let requiredPosts = do
+        loaded <- getPosts ()
+        need $ map fst loaded
+        pure $ map snd loaded
+
+  getTags <- newCache $ const $
+    groupPostsBy (map routeSegment . postTags) <$> requiredPosts
+
+  getCategories <- newCache $ const $
+    groupPostsBy (\post -> [routeSegment $ category post]) <$> requiredPosts
+
+  phony "build" $ do
+    announce "build" "doc"
+    availableTags <- getTags ()
+    availableCategories <- getCategories ()
+    let tagPages =
+            [ "tag" </> tagName </> "index.html"
+            | (tagName, _) <- Map.toAscList availableTags
+            ]
+
+        categoryPages =
+            [ "category" </> categoryName </> "index.html"
+            | (categoryName, _) <- Map.toAscList availableCategories
+            ]
+
+        validTaxonomyPages = tagPages ++ categoryPages
+
     staticFiles <- getDirectoryFiles "." ["site/images//*", "site/css//*", "site/js//*"]
-    need $ "docs/index.html"
-         : map postOutput (postFiles loaded)
-        ++ map staticOutput staticFiles
-        ++ [ outputFolder </> "tag" </> routeSegment t </> "index.html"
-           | p <- orderedPosts loaded, t <- postTags p
-           ]
-        ++ [ outputFolder </> "category" </> routeSegment (category p) </> "index.html"
-           | p <- orderedPosts loaded
-           ]
+
+
+    -- Need all static files
+    need $ map staticOutput staticFiles
+    -- Need all post files
+    posts' <- getPosts ()
+    forM_ posts' (\(loadedPath, _) -> do
+      need $ [loadedPath, postOutput loadedPath]
+      )
+    -- Need all taxonomy pages
+    need $ map (outputFolder </>) validTaxonomyPages
+    -- Finally, an index page for whole site
+    need [ "docs/index.html" ]
+
+    -- Computes stale taxonomy pages and remove it after site building
+    existingTaxonomyPages <- getDirectoryFiles outputFolder
+        [ "tag/*/index.html"
+        , "category/*/index.html"
+        ]
+
+    let staleTaxonomyPages =
+            filter (`notElem` validTaxonomyPages) existingTaxonomyPages
+
+    forM_ staleTaxonomyPages $ \stalePage ->
+      announce "remove/stale" (outputFolder </> stalePage)
+
+    removeFilesAfter outputFolder staleTaxonomyPages
 
   "docs/index.html" %> \out -> do
-    announce "render index" out
+    announce "render/index" out
     templateFiles
-    allPosts <- trackedPosts
+    allPosts <- requiredPosts
     writeListing out "" "Field Notes" True allPosts allPosts
 
   "docs/posts//*.html" %> \out -> do
-    announce "render post" out
+    announce "render/post" out
     templateFiles
     let source = ("site/posts" </> makeRelative (outputFolder </> "posts") out) -<.> "md"
     need [source]
-    allPosts <- trackedPosts
+    allPosts <- requiredPosts
     case find ((== dropDirectory1 out) . url) allPosts of
       Nothing -> fail $ "No post source for " <> out
       Just post -> do
@@ -287,45 +324,48 @@ buildRules = do
         writePost post older newer
 
   "docs/tag/*/index.html" %> \out -> do
-    announce "render tag" out
+    announce "render/tag" out
     templateFiles
-    allPosts <- trackedPosts
-    let segment = takeFileName . takeDirectory $ out
-        matchingTags = [ t | p <- allPosts, t <- postTags p, routeSegment t == segment ]
-    case matchingTags of
-      [] -> fail $ "No tag source for " <> out
-      (tagName:_) -> writeListing out "../../" ("Posts tagged “" <> tagName <> "”")
-                       False allPosts (filter (elem tagName . postTags) allPosts)
+    allPosts <- requiredPosts
+    availableTags <- getTags ()
+    let tagName = takeFileName . takeDirectory $ out
+    case Map.lookup tagName availableTags of
+      Nothing -> fail $ "No tag source for " <> out
+      Just posts' -> do
+        writeListing out "../../" ("Posts tagged “" <> tagName <> "”")
+          False allPosts posts'
 
   "docs/category/*/index.html" %> \out -> do
-    announce "render category" out
+    announce "render/category" out
     templateFiles
-    allPosts <- trackedPosts
-    let segment = takeFileName . takeDirectory $ out
-        matchingCategories = [ category p | p <- allPosts, routeSegment (category p) == segment ]
-    case matchingCategories of
-      [] -> fail $ "No category source for " <> out
-      (categoryName:_) -> writeListing out "../../" ("Posts in “" <> categoryName <> "”")
-                            False allPosts (filter ((== categoryName) . category) allPosts)
+    allPosts <- requiredPosts
+    availableCategories <- getCategories ()
+    let catName = takeFileName . takeDirectory $ out
+    case Map.lookup catName availableCategories of
+      Nothing -> fail $ "No category source for " <> out
+      Just posts' ->
+        writeListing out "../../" ("Posts in “" <> catName <> "”")
+          False allPosts posts'
 
   "docs/images//*" %> copyStatic
   "docs/css//*"    %> copyStatic
   "docs/js//*"     %> copyStatic
   where
+    copyStatic :: FilePath -> Action ()
     copyStatic out = do
       announce "copy asset" out
       let source = "site" </> makeRelative outputFolder out
       need [source]
       copyFileChanged source out
 
-neighbours :: Post -> [Post] -> (Maybe Post, Maybe Post)
-neighbours post posts' =
-  case dropWhile ((/= post) . snd) $ zip (Nothing : map Just posts') posts' of
-    ((newer, _) : rest) -> (newer, fmap snd (safeHead rest))
-    []                 -> (Nothing, Nothing)
-  where
-    safeHead []    = Nothing
-    safeHead (x:_) = Just x
+    neighbours :: Post -> [Post] -> (Maybe Post, Maybe Post)
+    neighbours post posts' =
+      case dropWhile ((/= post) . snd) $ zip (Nothing : map Just posts') posts' of
+        ((newer, _) : rest) -> (newer, fmap snd (safeHead rest))
+        []                 -> (Nothing, Nothing)
+      where
+        safeHead []    = Nothing
+        safeHead (x:_) = Just x
 
 main :: IO ()
 main = shakeArgs
