@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 99608593197be2adb4aa74b31a94255716eef02a03cb55c4477261cee7cf3fc2
+-- hash: 09dd94f3edbe56f97442e853bd6b0890482046208dfe805ac651cfe17c92022c
 
 name:           slick-template
 version:        0.1.0.0
@@ -30,7 +30,8 @@ source-repository head
 executable build-site
   main-is: Main.hs
   other-modules:
-      Paths_slick_template
+      Config
+      Manifest
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
@@ -38,6 +39,7 @@ executable build-site
       aeson
     , base >=4.7 && <5
     , containers
+    , directory
     , lens
     , lens-aeson
     , shake

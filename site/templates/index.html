@@ -38,7 +38,7 @@
         <p class="tag-cloud-label">browse by tag</p>
         <div class="tag-cloud">
           {{#tagCloud}}
-          <a class="tag-pill tag-size-{{weight}}" href="{{tagUrl}}?page=0">{{tag}} <span class="tag-count">{{count}}</span></a>
+          <a class="tag-pill tag-size-{{weight}}" href="{{sitePrefix}}{{tagUrl}}?page=0">{{tag}} <span class="tag-count">{{count}}</span></a>
           {{/tagCloud}}
           {{^tagCloud}}
           <span class="tag-cloud-empty">Add <code>tags: [...]</code> to a post's frontmatter to populate this.</span>
@@ -47,7 +47,7 @@
         <p class="tag-cloud-label category-cloud-label">browse by category</p>
         <div class="tag-cloud">
           {{#categoryCloud}}
-          <a class="tag-pill" href="{{taxonomyUrl}}?page=0">{{taxonomyName}}</a>
+          <a class="tag-pill" href="{{sitePrefix}}{{taxonomyUrl}}?page=0">{{taxonomyName}}</a>
           {{/categoryCloud}}
         </div>
       </div>
@@ -63,13 +63,13 @@
         </nav>
 
         {{#posts}}
-        <a class="entry" href="{{listingUrl}}">
+        <a class="entry" href="{{sitePrefix}}{{listingUrl}}">
             <span class="entry-date">{{entryDate}}</span>
           <span class="entry-body">
             <h2>{{entryTitle}}<span class="entry-arrow">&nbsp;→</span></h2>
             <span class="entry-meta">by {{entryAuthor}}</span>
-            <span class="entry-tags"><a class="chip" href="{{entryCategory.taxonomyUrl}}?page=0">{{entryCategory.taxonomyName}}</a>{{#entryTags}}<a class="chip" href="{{taxonomyUrl}}?page=0">{{taxonomyName}}</a>{{/entryTags}}</span>
-            {{#entryImage}}<img class="entry-cover" src="{{entryImage}}" alt="" loading="lazy" />{{/entryImage}}
+            <span class="entry-tags"><a class="chip" href="{{sitePrefix}}{{entryCategory.taxonomyUrl}}?page=0">{{entryCategory.taxonomyName}}</a>{{#entryTags}}<a class="chip" href="{{sitePrefix}}{{taxonomyUrl}}?page=0">{{taxonomyName}}</a>{{/entryTags}}</span>
+            {{#entryImage}}<img class="entry-cover" src="{{sitePrefix}}{{entryImage}}" alt="" loading="lazy" />{{/entryImage}}
           </span>
         </a>
         {{/posts}}

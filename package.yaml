@@ -19,6 +19,9 @@ executables:
   build-site:
     main:                Main.hs
     source-dirs:         app
+    other-modules:
+    - Config
+    - Manifest
     ghc-options:
     - -threaded
     - -rtsopts
@@ -35,3 +38,4 @@ executables:
     - aeson
     - lens-aeson
     - time
+    - directory

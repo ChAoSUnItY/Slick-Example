@@ -2,3 +2,5 @@
 *~
 .shake
 dist-newstyle/
+_build/
+notes/

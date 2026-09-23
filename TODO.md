@@ -1,0 +1,1 @@
+- [ ] Single posts should not trigger all other post's re-render when content is changed
