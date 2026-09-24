@@ -269,6 +269,7 @@ writePost post previousPost nextPost = do
         ("../category" </> routeSegment (category post) </> "")
       postWithTaxonomy = toJSON post
         & _Object . at "tags" ?~ toJSON tagLinks
+        & _Object . at "hasTags" ?~ toJSON (not $ null tagLinks)
         & _Object . at "category" ?~ toJSON categoryLink
       previousLink = maybe Null (toJSON . postLink) previousPost
       nextLink = maybe Null (toJSON . postLink) nextPost

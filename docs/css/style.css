@@ -267,8 +267,29 @@ a.chip:hover { border-color: var(--accent2); color: var(--accent2); }
   gap: .4rem;
 }
 .entry-tags { margin-top: .5rem; }
-.entry-tags:empty, .post-tags:empty { display: none; }
-.post-tags { margin-top: 1rem; }
+.entry-tags:empty { display: none; }
+.post-taxonomy {
+  display: grid;
+  gap: .45rem;
+  margin-top: 1rem;
+}
+.post-taxonomy-row {
+  display: grid;
+  grid-template-columns: 8ch minmax(0, 1fr);
+  align-items: start;
+  gap: .75rem;
+}
+.post-taxonomy-label {
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+.category-chip {
+  justify-self: start;
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
 
 /* -- post index list (editorial rows, not cards) -- */
 .entries { padding: clamp(2rem, 5vw, 3rem) 0 5rem; }
