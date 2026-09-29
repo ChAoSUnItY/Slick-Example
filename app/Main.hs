@@ -10,6 +10,7 @@ import           Control.Monad              (foldM, forM_, when)
 import           Config
 import           Data.Aeson                 as A
 import           Data.Aeson.Lens
+import           Data.Char                  (isDigit)
 import           Data.List                  (find, nub, sortBy)
 import qualified Data.Map.Strict            as Map
 import           Data.Time                  (Day, defaultTimeLocale, parseTimeM)
@@ -24,12 +25,22 @@ import qualified Data.Text                  as T
 -- | Data shared by the home page and taxonomy listing pages.
 data ListingInfo = ListingInfo
     { listingTitle      :: String
+    , metaTitle         :: String
+    , metaDescription   :: String
     , sitePrefix        :: String
     , posts             :: [ListingPost]
-    , tagCloud          :: [TagCount]
-    , categoryCloud     :: [TaxonomyLink]
+    , tagCloud          :: [CloudItem]
+    , categoryCloud     :: [CloudItem]
     , showTaxonomy      :: Bool
-    , indexPostsPerPage :: Int
+    , hasPagination    :: Bool
+    , pageNumber       :: Int
+    , pageCount        :: Int
+    , previousPage     :: Maybe PageLink
+    , nextPage         :: Maybe PageLink
+    } deriving (Generic, ToJSON)
+
+data PageLink = PageLink
+    { pageHref :: FilePath
     } deriving (Generic, ToJSON)
 
 -- | Data for a blog post.
@@ -146,40 +157,37 @@ listingPost post = ListingPost
   , entryImage = image post
   , entryTags =
       [ TaxonomyLink tagName
-          ("tag" </> routeSegment tagName </> "")
+          ("tag" </> routeSegment tagName </> homePagePath 1)
       | tagName <- postTags post
       ]
   , entryCategory = TaxonomyLink (category post)
-      ("category" </> routeSegment (category post) </> "")
+      ("category" </> routeSegment (category post) </> homePagePath 1)
   }
 
-buildTagCloud :: [Post] -> [TagCount]
-buildTagCloud allPosts =
-  let tagCounts = Map.toAscList . Map.fromListWith (+) $
-        [ (tagName, 1 :: Int)
-        | post <- allPosts
-        , tagName <- postTags post
-        ]
-      allCounts = map snd tagCounts
-      maxCount = maximum (1 : allCounts)
-      minCount = minimum (maxCount : allCounts)
-      weightFor n
-        | maxCount == minCount = 3
-        | otherwise =
-            1 + round (4 * fromIntegral (n - minCount)
-                         / fromIntegral (maxCount - minCount) :: Double)
-      toTagCount (tagName, n) =
-        TagCount tagName n (weightFor n)
-          ("tag" </> routeSegment tagName </> "")
-  in map toTagCount tagCounts
+buildWeightedCloud :: FilePath -> [String] -> [CloudItem]
+buildWeightedCloud taxonomy labels =
+  case Map.toAscList $ Map.fromListWith (+)
+         [ (label, 1 :: Int) | label <- labels ] of
+    [] -> []
+    counts ->
+      let frequencies = map snd counts
+          minimumCount = minimum frequencies
+          spread = maximum frequencies - minimumCount
+          weight n
+            | spread == 0 = 3
+            | otherwise = 1 + round
+                (4 * fromIntegral (n - minimumCount) / fromIntegral spread :: Double)
+      in [ CloudItem label n (weight n)
+             (taxonomy </> routeSegment label </> homePagePath 1)
+         | (label, n) <- counts
+         ]
 
-buildCategoryCloud :: [Post] -> [TaxonomyLink]
-buildCategoryCloud allPosts =
-  [ TaxonomyLink categoryName
-      ("category" </> routeSegment categoryName </> "")
-  | categoryName <- Map.keys . Map.fromList $
-      [ (category post, ()) | post <- allPosts ]
-  ]
+buildTagCloud :: [Post] -> [CloudItem]
+buildTagCloud allPosts = buildWeightedCloud "tag"
+  [ tagName | post <- allPosts, tagName <- nub $ postTags post ]
+
+buildCategoryCloud :: [Post] -> [CloudItem]
+buildCategoryCloud allPosts = buildWeightedCloud "category" $ map category allPosts
 
 -- Shake actions
 
@@ -213,39 +221,87 @@ requiredPosts getPosts = do
   need $ map sourcePath loadedPosts
   pure $ map postData loadedPosts
 
-writeListing
-  :: FilePath
-  -> HomeManifest
-  -> Action ()
-writeListing destination manifest =
+pageCountFor :: [a] -> Int
+pageCountFor items
+  | postsPerIndexPage <= 0 = error "postsPerIndexPage must be positive"
+  | otherwise = max 1 $ (length items + postsPerIndexPage - 1) `div` postsPerIndexPage
+
+pageNumbers :: [a] -> [Int]
+pageNumbers items = [1 .. pageCountFor items]
+
+pageSlice :: Int -> [a] -> [a]
+pageSlice page = take postsPerIndexPage . drop ((page - 1) * postsPerIndexPage)
+
+pageFromOutput :: FilePath -> Action Int
+pageFromOutput out =
+  let name = dropExtension $ takeFileName out
+  in case reads name of
+       [(page, "")] | page >= 1 && all isDigit name && show page == name -> pure page
+       _ -> fail $ "Invalid listing page: " <> out
+
+listingNavigation :: Int -> Int -> ListingInfo -> ListingInfo
+listingNavigation page total info = info
+  { posts = pageSlice page (posts info)
+  , metaTitle = metaTitle info <> pageTitleSuffix
+  , metaDescription = metaDescription info <> pageDescriptionSuffix
+  , hasPagination = total > 1
+  , pageNumber = page
+  , pageCount = total
+  , previousPage = if page > 1 then Just $ PageLink (homePagePath $ page - 1) else Nothing
+  , nextPage = if page < total then Just $ PageLink (homePagePath $ page + 1) else Nothing
+  }
+  where
+    pageTitleSuffix = if page == 1 then "" else " — Page " <> show page
+    pageDescriptionSuffix =
+      if page == 1 then "" else " Page " <> show page <> " of " <> show total <> "."
+
+writeListing :: FilePath -> Int -> HomeManifest -> Action ()
+writeListing destination page manifest =
   let listingInfo = ListingInfo
         { listingTitle = siteTitle
+        , metaTitle = siteTitle <> " — a Slick blog"
+        , metaDescription = "Notes on code, tools, and things worth writing down."
         , sitePrefix = ""
         , posts = homePosts manifest
         , tagCloud = homeTagCloud manifest
         , categoryCloud = homeCategoryCloud manifest
         , showTaxonomy = True
-        , indexPostsPerPage = postsPerIndexPage
+        , hasPagination = False
+        , pageNumber = 1
+        , pageCount = 1
+        , previousPage = Nothing
+        , nextPage = Nothing
         }
-  in renderListing destination listingInfo
+      total = pageCountFor $ homePosts manifest
+  in if page > total then fail $ "No home page " <> show page
+     else renderListing destination $ listingNavigation page total listingInfo
 
 writeTaxonomyListing
   :: FilePath
   -> FilePath
   -> String
+  -> Int
   -> [ListingPost]
   -> Action ()
-writeTaxonomyListing destination pathPrefix heading listingPosts =
+writeTaxonomyListing destination pathPrefix heading page listingPosts =
   let listingInfo = ListingInfo
         { listingTitle = heading
+        , metaTitle = heading <> " — " <> siteTitle
+        , metaDescription = heading <> " on " <> siteTitle <> "."
         , sitePrefix = pathPrefix
         , posts = listingPosts
         , tagCloud = []
         , categoryCloud = []
         , showTaxonomy = False
-        , indexPostsPerPage = postsPerIndexPage
+        , hasPagination = False
+        , pageNumber = 1
+        , pageCount = 1
+        , previousPage = Nothing
+        , nextPage = Nothing
         }
-  in renderListing destination listingInfo
+      total = pageCountFor listingPosts
+  in if page > total then fail $ "No taxonomy page " <> show page <> ": " <> destination
+     else renderListing destination $ listingNavigation page total listingInfo
 
 renderListing :: FilePath -> ListingInfo -> Action ()
 renderListing destination listingInfo = do
@@ -262,11 +318,11 @@ writePost post previousPost nextPost = do
   template <- compileTemplate' postTemplate
   let tagLinks =
         [ TaxonomyLink tagName
-            ("../tag" </> routeSegment tagName </> "")
+            ("../tag" </> routeSegment tagName </> homePagePath 1)
         | tagName <- postTags post
         ]
       categoryLink = TaxonomyLink (category post)
-        ("../category" </> routeSegment (category post) </> "")
+        ("../category" </> routeSegment (category post) </> homePagePath 1)
       postWithTaxonomy = toJSON post
         & _Object . at "tags" ?~ toJSON tagLinks
         & _Object . at "hasTags" ?~ toJSON (not $ null tagLinks)
@@ -286,17 +342,30 @@ copyStatic out = do
   need [source]
   copyFileChanged source out
 
+copyFirstPageToIndex :: FilePath -> Action ()
+copyFirstPageToIndex out = do
+  let firstPage = takeDirectory out </> homePagePath 1
+  need [firstPage]
+  copyFileChanged firstPage out
+
 removeStaleOwnedOutputs :: [FilePath] -> [FilePath] -> Action ()
 removeStaleOwnedOutputs validOutputs validManifests = do
+  -- Remove stale docs files
   removeStaleFiles outputFolder
     [ "posts//*.html"
-    , "tag/*/index.html"
-    , "category/*/index.html"
+    , "tag/*/*.html"
+    , "category/*/*.html"
     , "css//*"
     , "images//*"
     , "js//*"
     ]
     validOutputs
+
+  rootHtml <- getDirectoryFiles outputFolder ["*.html"]
+  let numberedPages = filter (all isDigit . dropExtension . takeFileName) rootHtml
+      stalePages = filter (`notElem` validOutputs) numberedPages
+  forM_ stalePages $ \path -> announce "remove/stale" (outputFolder </> path)
+  removeFilesAfter outputFolder stalePages
 
   removeStaleFiles listingManifestRoot
     [ "*.posts"
@@ -331,26 +400,34 @@ buildSite getPosts getTags getCategories = do
     , siteFolder </> "js//*"
     ]
 
-  let postPages =
-        map (makeRelative outputFolder . postOutput . sourcePath) loadedPosts
-      tagPages = map tagPagePath $ Map.keys availableTags
-      categoryPages = map categoryPagePath $ Map.keys availableCategories
-      staticPages =
-        map (makeRelative outputFolder . staticOutput) staticFiles
-      validOutputs =
-        postPages ++ tagPages ++ categoryPages ++ staticPages
-
-      manifestPaths =
+  let manifestPaths =
            [homeManifest]
         ++ map tagManifest (Map.keys availableTags)
         ++ map categoryManifest (Map.keys availableCategories)
       validManifests =
         map (makeRelative listingManifestRoot) manifestPaths
 
-  need $
-       [outputFolder </> "index.html"]
-    ++ map (outputFolder </>) validOutputs
-    ++ manifestPaths
+  need manifestPaths
+  homeListing <- readHomeManifest
+  tagListings <- mapM (readTaxonomyManifest . tagManifest) (Map.keys availableTags)
+  categoryListings <- mapM (readTaxonomyManifest . categoryManifest) (Map.keys availableCategories)
+
+  -- Computes all necessary output files to Shake file dependency
+  let postPages =
+        map (makeRelative outputFolder . postOutput . sourcePath) loadedPosts
+      homePages = "index.html" : map homePagePath (pageNumbers $ homePosts homeListing)
+      tagPages = concatMap (\manifest ->
+        ("tag" </> manifestSlug manifest </> "index.html") :
+        map (tagPagePath $ manifestSlug manifest) (pageNumbers $ manifestPosts manifest)) tagListings
+      categoryPages = concatMap (\manifest ->
+        ("category" </> manifestSlug manifest </> "index.html") :
+        map (categoryPagePath $ manifestSlug manifest) (pageNumbers $ manifestPosts manifest)) categoryListings
+      staticPages =
+        map (makeRelative outputFolder . staticOutput) staticFiles
+      validOutputs =
+        homePages ++ postPages ++ tagPages ++ categoryPages ++ staticPages
+
+  need $ map (outputFolder </>) validOutputs
 
   removeStaleOwnedOutputs validOutputs validManifests
 
@@ -413,11 +490,16 @@ buildRules = do
         (taxonomySlug group)
         (map listingPost $ taxonomyItems group)
 
-  -- home index html
-  outputFolder </> "index.html" %> \out -> do
+  -- The index aliases are exact copies of page one.
+  outputFolder </> "*.html" %> \out -> do
     announce "render/index" out
-    manifest <- readHomeManifest
-    writeListing out manifest
+    if takeFileName out == "index.html"
+      then do
+        copyFirstPageToIndex out
+      else do
+        page <- pageFromOutput out
+        manifest <- readHomeManifest
+        writeListing out page manifest
 
   -- post html
   outputFolder </> "posts//*.html" %> \out -> do
@@ -432,26 +514,36 @@ buildRules = do
         writePost post older newer
 
   -- tag html
-  outputFolder </> "tag/*/index.html" %> \out -> do
+  outputFolder </> "tag/*/*.html" %> \out -> do
     announce "render/tag" out
-    let slug = takeFileName $ takeDirectory out
-    manifest <- readTaxonomyManifest $ tagManifest slug
-    when (manifestSlug manifest /= slug) $
-      fail $ "Tag manifest slug mismatch for " <> out
-    writeTaxonomyListing out "../../"
-      ("Posts tagged “" <> manifestLabel manifest <> "”")
-      (manifestPosts manifest)
+    if takeFileName out == "index.html"
+      then do
+        copyFirstPageToIndex out
+      else do
+        page <- pageFromOutput out
+        let slug = takeFileName $ takeDirectory out
+        manifest <- readTaxonomyManifest $ tagManifest slug
+        when (manifestSlug manifest /= slug) $
+          fail $ "Tag manifest slug mismatch for " <> out
+        writeTaxonomyListing out "../../"
+          ("Posts tagged “" <> manifestLabel manifest <> "”") page
+          (manifestPosts manifest)
 
   -- category html
-  outputFolder </> "category/*/index.html" %> \out -> do
+  outputFolder </> "category/*/*.html" %> \out -> do
     announce "render/category" out
-    let slug = takeFileName $ takeDirectory out
-    manifest <- readTaxonomyManifest $ categoryManifest slug
-    when (manifestSlug manifest /= slug) $
-      fail $ "Category manifest slug mismatch for " <> out
-    writeTaxonomyListing out "../../"
-      ("Posts in “" <> manifestLabel manifest <> "”")
-      (manifestPosts manifest)
+    if takeFileName out == "index.html"
+      then do
+        copyFirstPageToIndex out
+      else do
+        page <- pageFromOutput out
+        let slug = takeFileName $ takeDirectory out
+        manifest <- readTaxonomyManifest $ categoryManifest slug
+        when (manifestSlug manifest /= slug) $
+          fail $ "Category manifest slug mismatch for " <> out
+        writeTaxonomyListing out "../../"
+          ("Posts in “" <> manifestLabel manifest <> "”") page
+          (manifestPosts manifest)
 
   outputFolder </> "images//*" %> copyStatic
   outputFolder </> "css//*"    %> copyStatic

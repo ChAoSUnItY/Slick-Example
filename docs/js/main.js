@@ -46,59 +46,6 @@
     onScroll();
   }
 
-  /* ---------- query-string pagination (listing pages only) ---------- */
-  var entries = document.querySelectorAll(".entry");
-  var paginations = document.querySelectorAll("[data-pagination]");
-  var postsPerPage = paginations.length ? Number(paginations[0].getAttribute("data-posts-per-page")) : 0;
-  var currentPage = 0;
-
-  function pageUrl(page) {
-    var nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.set("page", String(page));
-    return nextUrl.pathname + nextUrl.search + nextUrl.hash;
-  }
-
-  function requestedPage() {
-    var value = new URL(window.location.href).searchParams.get("page");
-    if (value === null || !/^(0|[1-9][0-9]*)$/.test(value)) return null;
-    return Number(value);
-  }
-
-  function renderPage(page) {
-    if (!paginations.length || !postsPerPage) return;
-    var pageCount = Math.max(1, Math.ceil(entries.length / postsPerPage));
-    var requested = page === null ? 0 : page;
-    currentPage = Math.min(Math.max(requested, 0), pageCount - 1);
-
-    if (page === null || requested !== currentPage) {
-      window.location.replace(pageUrl(currentPage));
-      return;
-    }
-
-    entries.forEach(function (entry) { entry.classList.add("is-page-hidden"); });
-    Array.prototype.slice.call(entries, currentPage * postsPerPage, (currentPage + 1) * postsPerPage)
-      .forEach(function (entry) { entry.classList.remove("is-page-hidden"); });
-
-    paginations.forEach(function (pagination) {
-      pagination.hidden = pageCount <= 1;
-      var pageStatus = pagination.querySelector("[data-page-status]");
-      var previousPageBtn = pagination.querySelector("[data-page-previous]");
-      var nextPageBtn = pagination.querySelector("[data-page-next]");
-      if (pageStatus) pageStatus.textContent = "Page " + (currentPage + 1) + " of " + pageCount;
-      if (previousPageBtn) {
-        previousPageBtn.href = pageUrl(Math.max(currentPage - 1, 0));
-        previousPageBtn.setAttribute("aria-disabled", String(currentPage === 0));
-        previousPageBtn.classList.toggle("is-disabled", currentPage === 0);
-      }
-      if (nextPageBtn) {
-        nextPageBtn.href = pageUrl(Math.min(currentPage + 1, pageCount - 1));
-        nextPageBtn.setAttribute("aria-disabled", String(currentPage === pageCount - 1));
-        nextPageBtn.classList.toggle("is-disabled", currentPage === pageCount - 1);
-      }
-    });
-  }
-  renderPage(requestedPage());
-
   /* ---------- copy-to-clipboard on code blocks ---------- */
   document.querySelectorAll(".post-body pre").forEach(function (pre) {
     var btn = document.createElement("button");

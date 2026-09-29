@@ -6,7 +6,7 @@
 module Manifest
   ( HomeManifest(..)
   , ListingPost(..)
-  , TagCount(..)
+  , CloudItem(..)
   , TaxonomyLink(..)
   , TaxonomyManifest(..)
   , categoryManifest
@@ -30,12 +30,12 @@ import           GHC.Generics               (Generic)
 import           System.Directory           (createDirectoryIfMissing,
                                             doesFileExist)
 
--- | A single entry in the tag cloud.
-data TagCount = TagCount
-  { tag    :: String
-  , count  :: Int
-  , weight :: Int
-  , tagUrl :: String
+-- | A weighted tag or category entry in the home-page clouds.
+data CloudItem = CloudItem
+  { cloudName   :: String
+  , cloudCount  :: Int
+  , cloudWeight :: Int
+  , cloudUrl    :: String
   } deriving (Generic, Read, Show, ToJSON)
 
 -- | A tag or category link rendered from a particular page depth.
@@ -57,8 +57,8 @@ data ListingPost = ListingPost
 
 data HomeManifest = HomeManifest
   { homePosts         :: [ListingPost]
-  , homeTagCloud      :: [TagCount]
-  , homeCategoryCloud :: [TaxonomyLink]
+  , homeTagCloud      :: [CloudItem]
+  , homeCategoryCloud :: [CloudItem]
   } deriving (Read, Show)
 
 data TaxonomyManifest = TaxonomyManifest
@@ -83,8 +83,8 @@ categoryManifest slug =
 writeHomeManifest
   :: FilePath
   -> [ListingPost]
-  -> [TagCount]
-  -> [TaxonomyLink]
+  -> [CloudItem]
+  -> [CloudItem]
   -> Action ()
 writeHomeManifest out posts tags categories =
   writeManifest out $ HomeManifest

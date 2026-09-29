@@ -1,6 +1,7 @@
 module Config
   ( buildOptions
   , categoryPagePath
+  , homePagePath
   , indexTemplate
   , outputFolder
   , postOutput
@@ -19,7 +20,7 @@ import           Data.Char                  (isAlphaNum, toLower)
 import           Data.List                  (intercalate)
 import           Development.Shake         (ShakeOptions, shakeOptions,
                                             shakeLintInside, shakeVersion)
-import           Development.Shake.FilePath ((</>), (-<.>), dropDirectory1,
+import           Development.Shake.FilePath ((</>), (<.>), (-<.>), dropDirectory1,
                                              makeRelative)
 
 siteFolder :: FilePath
@@ -55,16 +56,19 @@ staticOutput source = outputFolder </> dropDirectory1 source
 staticSourceForOutput :: FilePath -> FilePath
 staticSourceForOutput out = siteFolder </> makeRelative outputFolder out
 
-tagPagePath :: String -> FilePath
-tagPagePath tag' = "tag" </> tag' </> "index.html"
+homePagePath :: Int -> FilePath
+homePagePath page = show page <.> "html"
 
-categoryPagePath :: String -> FilePath
-categoryPagePath category' = "category" </> category' </> "index.html"
+tagPagePath :: String -> Int -> FilePath
+tagPagePath tag' page = "tag" </> tag' </> homePagePath page
+
+categoryPagePath :: String -> Int -> FilePath
+categoryPagePath category' page = "category" </> category' </> homePagePath page
 
 buildOptions :: ShakeOptions
 buildOptions = shakeOptions
   { shakeLintInside = ["."]
-  , shakeVersion = "listing-manifests-v2"
+  , shakeVersion = "html-pagination-v5-" <> show postsPerIndexPage
   }
 
 -- Helper functions

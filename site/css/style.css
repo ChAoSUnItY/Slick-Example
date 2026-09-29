@@ -299,11 +299,8 @@ a.chip:hover { border-color: var(--accent2); color: var(--accent2); }
   gap: clamp(1rem, 3vw, 2.5rem);
   padding: 2rem 0;
   border-bottom: 1px solid var(--line);
-  text-decoration: none;
-  color: inherit;
 }
 .entry:first-child { padding-top: 0; }
-.entry.is-page-hidden { display: none; }
 .entry-date {
   font-family: var(--font-mono);
   font-size: .82rem;
@@ -338,13 +335,12 @@ a.chip:hover { border-color: var(--accent2); color: var(--accent2); }
 }
 .pagination-link-next { text-align: right; }
 .pagination-status { color: var(--ink-faint); text-align: center; }
-.pagination-link.is-disabled { color: var(--ink-faint); cursor: default; pointer-events: none; }
 .entry-body h2 {
   font-size: clamp(1.35rem, 2.4vw, 1.7rem);
   margin-bottom: .4rem;
-  transition: color .15s ease;
 }
-.entry:hover .entry-body h2 { color: var(--accent2); }
+.entry-link { color: inherit; text-decoration: none; transition: color .15s ease; }
+.entry-link:hover, .entry-link:focus-visible { color: var(--accent2); }
 .entry-meta {
   font-family: var(--font-ui);
   font-size: .85rem;
@@ -368,7 +364,10 @@ a.chip:hover { border-color: var(--accent2); color: var(--accent2); }
   display: inline-block;
   margin-left: .35em;
 }
-.entry:hover .entry-arrow { opacity: 1; transform: translateX(0); }
+.entry-link:hover .entry-arrow, .entry-link:focus-visible .entry-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
 
 .empty-state {
   font-family: var(--font-ui);
