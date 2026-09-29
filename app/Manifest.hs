@@ -7,15 +7,21 @@ module Manifest
   ( HomeManifest(..)
   , ListingPost(..)
   , CloudItem(..)
+  , PostLink(..)
+  , PostNavigation(..)
   , TaxonomyLink(..)
   , TaxonomyManifest(..)
   , categoryManifest
   , homeManifest
   , listingManifestRoot
+  , postNavigationManifest
+  , postNavigationRoot
   , readHomeManifest
+  , readPostNavigationManifest
   , readTaxonomyManifest
   , tagManifest
   , writeHomeManifest
+  , writePostNavigationManifest
   , writeTaxonomyManifest
   ) where
 
@@ -25,7 +31,8 @@ import qualified Data.Text                  as T
 import qualified Data.Text.IO               as TIO
 import           Development.Shake         (Action, liftIO, readFile',
                                             writeFileChanged)
-import           Development.Shake.FilePath ((</>), (<.>), takeDirectory)
+import           Development.Shake.FilePath ((</>), (<.>), (-<.>),
+                                             dropDirectory1, takeDirectory)
 import           GHC.Generics               (Generic)
 import           System.Directory           (createDirectoryIfMissing,
                                             doesFileExist)
@@ -55,6 +62,17 @@ data ListingPost = ListingPost
   , entryCategory :: TaxonomyLink
   } deriving (Generic, Read, Show, ToJSON)
 
+-- | Links on a post page are relative to the posts directory.
+data PostLink = PostLink
+  { linkTitle :: String
+  , linkUrl   :: String
+  } deriving (Generic, Read, Show, ToJSON)
+
+data PostNavigation = PostNavigation
+  { navigationPrevious :: Maybe PostLink
+  , navigationNext     :: Maybe PostLink
+  } deriving (Read, Show)
+
 data HomeManifest = HomeManifest
   { homePosts         :: [ListingPost]
   , homeTagCloud      :: [CloudItem]
@@ -69,6 +87,13 @@ data TaxonomyManifest = TaxonomyManifest
 
 listingManifestRoot :: FilePath
 listingManifestRoot = "_build/listings"
+
+postNavigationRoot :: FilePath
+postNavigationRoot = "_build/navigation"
+
+postNavigationManifest :: FilePath -> FilePath
+postNavigationManifest postUrl =
+  postNavigationRoot </> dropDirectory1 (postUrl -<.> "nav")
 
 homeManifest :: FilePath
 homeManifest = listingManifestRoot </> "home.posts"
@@ -109,6 +134,12 @@ writeTaxonomyManifest out label slug posts =
 readHomeManifest :: Action HomeManifest
 readHomeManifest =
   readManifest "home listing" homeManifest
+
+writePostNavigationManifest :: FilePath -> PostNavigation -> Action ()
+writePostNavigationManifest = writeManifest
+
+readPostNavigationManifest :: FilePath -> Action PostNavigation
+readPostNavigationManifest = readManifest "post navigation"
 
 readTaxonomyManifest :: FilePath -> Action TaxonomyManifest
 readTaxonomyManifest = readManifest "taxonomy"

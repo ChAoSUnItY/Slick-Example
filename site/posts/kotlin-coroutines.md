@@ -2,7 +2,7 @@
 title: "Kotlin Coroutines Explained"
 author: "Your Name"
 date: Aug 3, 2026
-tags: [kotlin, concurrency]
+tags: [kotlin, concurrency, jvm]
 category: programming
 description: Lorem ipsum dolor sit amet.
 ---

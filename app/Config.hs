@@ -68,7 +68,7 @@ categoryPagePath category' page = "category" </> category' </> homePagePath page
 buildOptions :: ShakeOptions
 buildOptions = shakeOptions
   { shakeLintInside = ["."]
-  , shakeVersion = "html-pagination-v5-" <> show postsPerIndexPage
+  , shakeVersion = "post-navigation-v1-" <> show postsPerIndexPage
   }
 
 -- Helper functions

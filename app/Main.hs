@@ -6,12 +6,12 @@ module Main where
 
 import           Control.Lens
 import           Control.Applicative        ((<|>))
-import           Control.Monad              (foldM, forM_, when)
+import           Control.Monad              (foldM, forM_)
 import           Config
 import           Data.Aeson                 as A
 import           Data.Aeson.Lens
 import           Data.Char                  (isDigit)
-import           Data.List                  (find, nub, sortBy)
+import           Data.List                  (nub, sortBy)
 import qualified Data.Map.Strict            as Map
 import           Data.Time                  (Day, defaultTimeLocale, parseTimeM)
 import           Development.Shake
@@ -69,14 +69,6 @@ data TaxonomyGroup = TaxonomyGroup
   , taxonomyItems :: [Post]
   }
 
--- | A link to a neighbouring post. The URL is relative to a page in
--- `docs/posts/`, unlike `Post.url`, which is relative to the site root.
-data PostLink =
-  PostLink
-    { linkTitle :: String
-    , linkUrl   :: String
-    } deriving (Generic, ToJSON)
-
 type Cache a = () -> Action a
 
 -- Pure post components
@@ -97,23 +89,23 @@ postDate post =
     , "%Y-%m-%d"
     ]
 
-postLink :: Post -> PostLink
+postLink :: ListingPost -> PostLink
 postLink post = PostLink
-  { linkTitle = title post
-  , linkUrl = dropDirectory1 (url post)
+  { linkTitle = entryTitle post
+  , linkUrl = dropDirectory1 (listingUrl post)
   }
 
 safeHead :: [a] -> Maybe a
 safeHead []    = Nothing
 safeHead (x:_) = Just x
 
-neighbours :: Post -> [Post] -> (Maybe Post, Maybe Post)
+neighbours :: FilePath -> [ListingPost] -> Maybe (Maybe ListingPost, Maybe ListingPost)
 neighbours target = go Nothing
   where
-    go :: Maybe Post -> [Post] -> (Maybe Post, Maybe Post)
-    go _ [] = (Nothing, Nothing)
+    go :: Maybe ListingPost -> [ListingPost] -> Maybe (Maybe ListingPost, Maybe ListingPost)
+    go _ [] = Nothing
     go newer (current : olderPosts)
-      | current == target = (newer, safeHead olderPosts)
+      | listingUrl current == target = Just (newer, safeHead olderPosts)
       | otherwise = go (Just current) olderPosts
 
 -- Taxonomy components
@@ -312,8 +304,8 @@ renderListing destination listingInfo = do
 
 -- | Render a post with links to its neighbours: next is newer and previous is
 -- older, relative to the newest-first index order.
-writePost :: Post -> Maybe Post -> Maybe Post -> Action ()
-writePost post previousPost nextPost = do
+writePost :: Post -> PostNavigation -> Action ()
+writePost post navigation = do
   need [postTemplate]
   template <- compileTemplate' postTemplate
   let tagLinks =
@@ -327,8 +319,8 @@ writePost post previousPost nextPost = do
         & _Object . at "tags" ?~ toJSON tagLinks
         & _Object . at "hasTags" ?~ toJSON (not $ null tagLinks)
         & _Object . at "category" ?~ toJSON categoryLink
-      previousLink = maybe Null (toJSON . postLink) previousPost
-      nextLink = maybe Null (toJSON . postLink) nextPost
+      previousLink = maybe Null toJSON (navigationPrevious navigation)
+      nextLink = maybe Null toJSON (navigationNext navigation)
       postWithNavigation = postWithTaxonomy
         & _Object . at "previousPost" ?~ previousLink
         & _Object . at "nextPost" ?~ nextLink
@@ -348,8 +340,8 @@ copyFirstPageToIndex out = do
   need [firstPage]
   copyFileChanged firstPage out
 
-removeStaleOwnedOutputs :: [FilePath] -> [FilePath] -> Action ()
-removeStaleOwnedOutputs validOutputs validManifests = do
+removeStaleOwnedOutputs :: [FilePath] -> [FilePath] -> [FilePath] -> Action ()
+removeStaleOwnedOutputs validOutputs validManifests validNavigation = do
   -- Remove stale docs files
   removeStaleFiles outputFolder
     [ "posts//*.html"
@@ -373,6 +365,8 @@ removeStaleOwnedOutputs validOutputs validManifests = do
     , "category/*.posts"
     ]
     validManifests
+
+  removeStaleFiles postNavigationRoot ["//*.nav"] validNavigation
 
 removeStaleFiles :: FilePath -> [FilePattern] -> [FilePath] -> Action ()
 removeStaleFiles root ownedPatterns validPaths = do
@@ -406,6 +400,10 @@ buildSite getPosts getTags getCategories = do
         ++ map categoryManifest (Map.keys availableCategories)
       validManifests =
         map (makeRelative listingManifestRoot) manifestPaths
+      navigationPaths =
+        map (postNavigationManifest . url . postData) loadedPosts
+      validNavigation =
+        map (makeRelative postNavigationRoot) navigationPaths
 
   need manifestPaths
   homeListing <- readHomeManifest
@@ -429,7 +427,7 @@ buildSite getPosts getTags getCategories = do
 
   need $ map (outputFolder </>) validOutputs
 
-  removeStaleOwnedOutputs validOutputs validManifests
+  removeStaleOwnedOutputs validOutputs validManifests validNavigation
 
 -- Rules
 
@@ -468,6 +466,20 @@ buildRules = do
       (buildTagCloud allPosts)
       (buildCategoryCloud allPosts)
 
+  -- A post page depends only on its source and its own neighbour links.
+  postNavigationRoot </> "//*.nav" %> \out -> do
+    announce "update/manifest" out
+    need [homeManifest]
+    manifest <- readHomeManifest
+    let postUrl = "posts" </> (makeRelative postNavigationRoot out -<.> "html")
+    case neighbours postUrl (homePosts manifest) of
+      Nothing -> fail $ "No post in home manifest for " <> out
+      Just (newer, older) ->
+        writePostNavigationManifest out $ PostNavigation
+          { navigationPrevious = postLink <$> older
+          , navigationNext = postLink <$> newer
+          }
+
   -- post manifests
   listingManifestRoot </> "tag/*.posts" %> \out -> do
     availableTags <- getTags ()
@@ -505,13 +517,11 @@ buildRules = do
   outputFolder </> "posts//*.html" %> \out -> do
     announce "render/post" out
     let source = postSourceForOutput out
-    need [source]
-    allPosts <- requiredPosts getPosts
-    case find ((== dropDirectory1 out) . url) allPosts of
-      Nothing -> fail $ "No post source for " <> out
-      Just post -> do
-        let (newer, older) = neighbours post allPosts
-        writePost post older newer
+        navigationPath = postNavigationManifest $ dropDirectory1 out
+    need [source, navigationPath]
+    post <- loadPost source
+    navigation <- readPostNavigationManifest navigationPath
+    writePost post navigation
 
   -- tag html
   outputFolder </> "tag/*/*.html" %> \out -> do
@@ -523,8 +533,6 @@ buildRules = do
         page <- pageFromOutput out
         let slug = takeFileName $ takeDirectory out
         manifest <- readTaxonomyManifest $ tagManifest slug
-        when (manifestSlug manifest /= slug) $
-          fail $ "Tag manifest slug mismatch for " <> out
         writeTaxonomyListing out "../../"
           ("Posts tagged “" <> manifestLabel manifest <> "”") page
           (manifestPosts manifest)
@@ -539,8 +547,6 @@ buildRules = do
         page <- pageFromOutput out
         let slug = takeFileName $ takeDirectory out
         manifest <- readTaxonomyManifest $ categoryManifest slug
-        when (manifestSlug manifest /= slug) $
-          fail $ "Category manifest slug mismatch for " <> out
         writeTaxonomyListing out "../../"
           ("Posts in “" <> manifestLabel manifest <> "”") page
           (manifestPosts manifest)
